@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import '../../../../widgets/event_list_item.dart';
+import '../../../widgets/event_list_item.dart';
 import '../../constants/app_colors/app_colors.dart';
 import '../controllers/bottom_nav_bar_controller.dart';
 import '../controllers/calendar_controller.dart';
 
-import '../../../../widgets/calendar_day.dart';
 
 class CalendarScreen extends GetView<CalendarController> {
   final controller = Get.put(CalendarController());
   final controllerBottom = Get.put(BottomNavBarController());
+
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
@@ -20,22 +20,31 @@ class CalendarScreen extends GetView<CalendarController> {
       body: Container(
         color: AppColors.calendarColor,
         child: Obx(
-          () => Column(
-            children: [
-              SizedBox(
-                height: screenHeight * 0.05,
+              () => Stack(
+                children: [
+                  Column(
+                              children: [
+                  SizedBox(height: screenHeight * 0.05),
+                  _buildCalendarHeader(),
+                  _buildCalendarGrid(),
+                  SizedBox(height: screenHeight * 0.02),
+                  Expanded(
+                    child: _buildEventList(
+                      height: screenHeight,
+                      width: screenWidth,
+                    ),
+                  ),
+                              ],
+                            ),
+
+                  controller.isLoading.value ? Container(
+                    color: Colors.black.withOpacity(0.2),
+                    child: Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                  ) : Container()
+                ],
               ),
-              _buildCalendarHeader(),
-              _buildCalendarGrid(),
-              SizedBox(
-                height: screenHeight * 0.02,
-              ),
-              Expanded(
-                child:
-                    _buildEventList(height: screenHeight, width: screenWidth),
-              ),
-            ],
-          ),
         ),
       ),
     );
@@ -49,7 +58,7 @@ class CalendarScreen extends GetView<CalendarController> {
         children: [
           IconButton(
             onPressed: () => controller.changeMonth(-1),
-            icon: Icon(
+            icon: const Icon(
               Icons.arrow_back_ios,
               color: Colors.white,
               size: 15,
@@ -57,15 +66,16 @@ class CalendarScreen extends GetView<CalendarController> {
           ),
           Text(
             DateFormat('MMMM yyyy').format(controller.currentDate.value),
-            style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w500,
-                color: Colors.white,
-                fontFamily: 'Roboto'),
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w500,
+              color: Colors.white,
+              fontFamily: 'Roboto',
+            ),
           ),
           IconButton(
             onPressed: () => controller.changeMonth(1),
-            icon: Icon(
+            icon: const Icon(
               Icons.arrow_forward_ios,
               color: Colors.white,
               size: 15,
@@ -89,9 +99,8 @@ class CalendarScreen extends GetView<CalendarController> {
     ).day;
     final firstDayWeekday = firstDay.weekday;
 
-    // Calculate total number of grid cells needed (including trailing empty cells)
     int totalGridCells =
-        (firstDayWeekday - 1 + daysInMonth).ceilToDouble().toInt();
+    (firstDayWeekday - 1 + daysInMonth).ceilToDouble().toInt();
     if (totalGridCells % 7 != 0) {
       totalGridCells = totalGridCells + (7 - (totalGridCells % 7));
     }
@@ -101,27 +110,28 @@ class CalendarScreen extends GetView<CalendarController> {
         Row(
           children: ['S', 'M', 'T', 'W', 'T', 'F', 'S']
               .map((dayName) => Expanded(
-                    child: Center(
-                        child: Text(
-                      dayName,
-                      style: TextStyle(color: Colors.white),
-                    )),
-                  ))
+            child: Center(
+              child: Text(
+                dayName,
+                style: const TextStyle(color: Colors.white),
+              ),
+            ),
+          ))
               .toList(),
         ),
         GridView.builder(
           shrinkWrap: true,
-          physics: NeverScrollableScrollPhysics(),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 7,
           ),
-          itemCount: totalGridCells, // Use the correct total count
+          itemCount: totalGridCells,
           itemBuilder: (context, index) {
             int dayNumber = index - firstDayWeekday + 1;
             if (index < firstDayWeekday - 1 ||
                 dayNumber < 1 ||
                 dayNumber > daysInMonth) {
-              return Container(); // Empty containers for leading/trailing days
+              return Container();
             }
 
             final day = DateTime(
@@ -130,14 +140,43 @@ class CalendarScreen extends GetView<CalendarController> {
               dayNumber,
             );
 
-            return CalendarDay(
-              day: day,
-              isSelected: day == controller.selectedDate.value,
-              hasEvent: controller.events.any((event) =>
-                  event.date.year == day.year &&
-                  event.date.month == day.month &&
-                  event.date.day == day.day),
+            return GestureDetector(
               onTap: () => controller.selectDate(day),
+              child: Stack(
+                children: [
+                  Container( // Add some margin around each day
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: day == controller.selectedDate.value
+                          ? AppColors.dateSelectedColor : Colors.transparent,
+                    ),
+                    child: Center(
+                      child: Text(
+                        day.day.toString(),
+                        style: TextStyle(
+                          color:Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                  if (controller.eventsByDate.containsKey(day.day) &&
+                      controller.eventsByDate[day.day]!.isNotEmpty)
+                    Positioned(
+                      bottom: 4,
+                      left: 0,
+                      right: 0,
+                      child: Container(
+                        height: 6,
+                        width: 6,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color:day == controller.selectedDate.value
+                              ?  AppColors.white : AppColors.dateSelectedColor,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             );
           },
         ),
@@ -146,16 +185,11 @@ class CalendarScreen extends GetView<CalendarController> {
   }
 
   Widget _buildEventList({required double height, required double width}) {
-    final filteredEvents = controller.events
-        .where((event) =>
-            event.date.day == controller.selectedDate.value.day &&
-            event.date.month == controller.selectedDate.value.month &&
-            event.date.year == controller.selectedDate.value.year)
-        .toList();
+    final filteredEvents = controller.eventsForSelectedDate;
 
     if (filteredEvents.isEmpty) {
       return Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.only(
             topLeft: Radius.circular(30),
@@ -166,38 +200,36 @@ class CalendarScreen extends GetView<CalendarController> {
           children: [
             Column(
               children: [
-                SizedBox(
-                  height: height * 0.02,
-                ),
+                SizedBox(height: height * 0.02),
                 Align(
                   alignment: Alignment.centerLeft,
                   child: Container(
-                    margin: EdgeInsets.only(left: 12.0, right: 12),
-                    child: Text(
+                    margin: const EdgeInsets.only(left: 12.0, right: 12),
+                    child: const Text(
                       'Upcoming Events',
                       style: TextStyle(
-                          fontSize: 20,
-                          color: AppColors.textDarkColor,
-                          fontFamily: 'Roboto',
-                          fontWeight: FontWeight.bold),
+                        fontSize: 20,
+                        color: AppColors.textDarkColor,
+                        fontFamily: 'Roboto',
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ),
-                SizedBox(
-                  height: height * 0.02,
-                ),
-                Expanded(
-                  child: Center(child: Text('No events on this day')),
+                SizedBox(height: height * 0.02),
+                const Expanded(
+                  child: Center(
+                    child: Text('No events on this day'),
+                  ),
                 ),
               ],
             ),
-
             Positioned(
               bottom: 15,
               right: 15,
               child: GestureDetector(
-                onTap: (){
-                  controllerBottom.selectedIndex.value=2;
+                onTap: () {
+                  controllerBottom.selectedIndex.value = 2;
                 },
                 child: Image.asset(
                   'assets/images/select.png',
@@ -207,11 +239,11 @@ class CalendarScreen extends GetView<CalendarController> {
             ),
           ],
         ),
-      ); // Or "Upcoming Events"
+      );
     }
 
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(30),
@@ -222,26 +254,23 @@ class CalendarScreen extends GetView<CalendarController> {
         children: [
           Column(
             children: [
-              SizedBox(
-                height: height * 0.02,
-              ),
+              SizedBox(height: height * 0.02),
               Align(
                 alignment: Alignment.centerLeft,
                 child: Container(
-                  margin: EdgeInsets.only(left: 12.0, right: 12),
-                  child: Text(
+                  margin: const EdgeInsets.only(left: 12.0, right: 12),
+                  child: const Text(
                     'Upcoming Events',
                     style: TextStyle(
-                        fontSize: 20,
-                        color: AppColors.textDarkColor,
-                        fontFamily: 'Roboto',
-                        fontWeight: FontWeight.bold),
+                      fontSize: 20,
+                      color: AppColors.textDarkColor,
+                      fontFamily: 'Roboto',
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),
-              SizedBox(
-                height: height * 0.02,
-              ),
+              SizedBox(height: height * 0.02),
               Expanded(
                 child: ListView.builder(
                   itemCount: filteredEvents.length,
@@ -252,13 +281,12 @@ class CalendarScreen extends GetView<CalendarController> {
               ),
             ],
           ),
-
           Positioned(
             bottom: 15,
             right: 15,
             child: GestureDetector(
-              onTap: (){
-                controllerBottom.selectedIndex.value=2;
+              onTap: () {
+                controllerBottom.selectedIndex.value = 2;
               },
               child: Image.asset(
                 'assets/images/select.png',

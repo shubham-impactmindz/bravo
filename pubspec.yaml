@@ -37,6 +37,15 @@ dependencies:
   get:
   intl:
   web_socket_channel:
+  http:
+  shared_preferences:
+  path_provider:
+  webview_flutter:
+  dio:
+  multi_select_flutter:
+  file_picker:
+  image_picker:
+  flutter_pdfview:
 
 dev_dependencies:
   flutter_test:

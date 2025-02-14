@@ -1,27 +1,25 @@
-import 'package:bravo/app/constants/app_colors/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
-import '../routes/app_pages.dart';
+import '../../constants/app_colors/app_colors.dart';
 import '../controllers/unique_code_controller.dart';
 
+class UniqueCodeScreen extends StatelessWidget {
+  UniqueCodeScreen({super.key});
+  final UniqueCodeController controller = Get.put(UniqueCodeController());
+  final TextEditingController textController = TextEditingController();
 
-class UniqueCodeScreen extends GetView<UniqueCodeController> {
 
-  final ctrl = Get.put(UniqueCodeController());
   @override
   Widget build(BuildContext context) {
-    // Screen dimensions
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
-      backgroundColor: AppColors.calendarColor, // Dark background color
-      resizeToAvoidBottomInset: true, // Prevent overflow when keyboard appears
+      backgroundColor: AppColors.calendarColor,
+      resizeToAvoidBottomInset: true,
       body: SafeArea(
         child: Column(
           children: [
-            // Logo Section (15% of screen height)
             Container(
               height: screenHeight * 0.15,
               alignment: Alignment.center,
@@ -30,11 +28,10 @@ class UniqueCodeScreen extends GetView<UniqueCodeController> {
                 backgroundColor: Colors.white,
                 child: Padding(
                   padding: EdgeInsets.all(screenHeight * 0.01),
-                  child: Image.asset('assets/images/logo.png'), // Replace with your logo
+                  child: Image.asset('assets/images/logo.png'),
                 ),
               ),
             ),
-            // Unique Code Section
             Expanded(
               child: Container(
                 width: screenWidth,
@@ -71,22 +68,23 @@ class UniqueCodeScreen extends GetView<UniqueCodeController> {
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
                       child: TextField(
+                        controller: textController,
                         textAlign: TextAlign.center,
                         keyboardType: TextInputType.number,
                         style: TextStyle(
                           fontSize: screenHeight * 0.025,
-                          letterSpacing: 20,
+                          letterSpacing: 10,
                         ),
                         decoration: InputDecoration(
                           hintText: '1234567891',
                           hintStyle: TextStyle(color: Colors.black54),
                           contentPadding: EdgeInsets.symmetric(vertical: screenHeight * 0.02),
                           enabledBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: AppColors.otpBorderColor, width: 1.5), // Default border
+                            borderSide: BorderSide(color: AppColors.otpBorderColor, width: 1.5),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           focusedBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: AppColors.otpBorderColor, width: 2.0), // Border when focused
+                            borderSide: BorderSide(color: AppColors.otpBorderColor, width: 2.0),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           border: OutlineInputBorder(
@@ -96,18 +94,20 @@ class UniqueCodeScreen extends GetView<UniqueCodeController> {
                         ),
                       ),
                     ),
-                    Spacer(), // Pushes the image to the bottom
-                    GestureDetector(
-                      onTap: (){
-                        Get.toNamed(Routes.home);
+                    Spacer(),
+                    Obx(() => controller.isLoading.value
+                        ? Center(child: CircularProgressIndicator())
+                        : GestureDetector(
+                      onTap: () {
+                        controller.fetchUserData(textController.text.trim());
                       },
                       child: Center(
                         child: Image.asset(
                           'assets/images/sign_in.png',
-                          height: screenHeight * 0.2, // Adjust image size as needed
+                          height: screenHeight * 0.2,
                         ),
                       ),
-                    ),
+                    )),
                   ],
                 ),
               ),

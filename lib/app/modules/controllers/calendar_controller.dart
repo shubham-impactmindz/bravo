@@ -1,74 +1,39 @@
 import 'package:get/get.dart';
+
+import '../../constants/app_colors/app_colors.dart';
+import '../apiservice/api_service.dart';
 import '../models/event_model.dart';
-import '../routes/app_pages.dart';
 
 class CalendarController extends GetxController {
   var currentDate = DateTime.now().obs;
   var selectedDate = DateTime.now().obs;
-  var events = <Event>[].obs; // Replace with actual data fetch
+  var eventsByDate = <int, List<Event>>{}.obs;
+  var eventsForSelectedDate = <Event>[].obs;
+  final ApiService apiService = ApiService();
+  var isLoading = false.obs;
 
   @override
   void onInit() {
-    // Sample event data (replace with API call or local DB)
-    events.value = [
-      Event(
-        date: DateTime(2025, 02, 1),
-        title: 'Meeting with John',
-        time: '10:00 AM',
-        description: 'Discuss project updates',
-      ),
-      Event(
-        date: DateTime(2025, 2, 7),
-        title: 'Team Lunch',
-        time: '1:00 PM',
-        description: 'Outing with the team',
-      ),
-      Event(
-        date: DateTime(2025, 2, 12),
-        title: 'Workout with Ella',
-        time: '19:00-20:00',
-        cost: 50,
-        createdBy: 'Jaini Shah',
-      ),
-      Event(
-        date: DateTime(2025, 2, 12),
-        title: 'Workout with Ella',
-        time: '19:00-20:00',
-        cost: 50,
-        createdBy: 'Jaini Shah',
-      ),
-      Event(
-        date: DateTime(2025, 2, 12),
-        title: 'Workout with Ella',
-        time: '19:00-20:00',
-        cost: 50,
-        createdBy: 'Jaini Shah',
-      ),
-      Event(
-        date: DateTime(2025, 2, 12),
-        title: 'Workout with Ella',
-        time: '19:00-20:00',
-        cost: 50,
-        createdBy: 'Jaini Shah',
-      ),
-      Event(
-        date: DateTime(2025, 2, 12),
-        title: 'Workout with Ella',
-        time: '19:00-20:00',
-        cost: 50,
-        createdBy: 'Jaini Shah',
-      ),
-      Event(
-        date: DateTime(2025, 2, 12),
-        title: 'Workout with Ella',
-        time: '19:00-20:00',
-        cost: 50,
-        createdBy: 'Jaini Shah',
-      ),
-    ];
-
-    filterEventsByDate(selectedDate.value);
+    fetchEvents();
     super.onInit();
+  }
+
+  void fetchEvents() async {
+    int month = currentDate.value.month;
+    int year = currentDate.value.year;
+
+    isLoading.value = true;
+    update();
+    try {
+      var fetchedEvents = await apiService.fetchEvents(month, year);
+      eventsByDate.value = fetchedEvents;
+      filterEventsByDate(selectedDate.value);
+    }
+    catch (e){
+      Get.snackbar('Error', 'Something went wrong',colorText: AppColors.white,backgroundColor: AppColors.calendarColor);
+    } finally{
+      isLoading.value = false;
+    }
   }
 
   void changeMonth(int delta) {
@@ -77,6 +42,7 @@ class CalendarController extends GetxController {
       currentDate.value.month + delta,
       1,
     );
+    fetchEvents();
   }
 
   void selectDate(DateTime date) {
@@ -85,16 +51,6 @@ class CalendarController extends GetxController {
   }
 
   void filterEventsByDate(DateTime date) {
-    // Implement filtering logic here (using events list)
-    // ...
-  }
-
-  // Edit/Delete event methods
-  void editEvent(Event event) {
-    Get.toNamed(Routes.editEvent);
-  }
-
-  void deleteEvent(Event event) {
-    // ...
+    eventsForSelectedDate.value = eventsByDate[date.day] ?? [];
   }
 }

@@ -1,5 +1,6 @@
 // app/routes/app_pages.dart
 
+import 'package:bravo/app/modules/views/view_event_screen.dart';
 import 'package:get/get.dart';
 
 import '../views/chat_detail_screen.dart';
@@ -25,5 +26,6 @@ class AppPages {
     GetPage(name: Routes.studentDetail, page: () => StudentDetailScreen()),
     GetPage(name: Routes.studentList, page: () => StudentListScreen()),
     GetPage(name: Routes.chatDetail, page: () => ChatDetailScreen()),
+    GetPage(name: Routes.viewEvent, page: () => ViewEventScreen()),
   ];
 }
