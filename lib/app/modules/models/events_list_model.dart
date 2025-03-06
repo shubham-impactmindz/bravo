@@ -96,7 +96,7 @@ class EventList {
     createdAt: json["created_at"] == null ? null : DateTime.parse(json["created_at"]),
     updatedAt: json["updated_at"] == null ? null : DateTime.parse(json["updated_at"]),
     createdByName: json["created_by_name"],
-    participants: json["participants"] == null ? [] : List<Participant>.from(json["participants"]!.map((x) => Participant.fromJson(x))),
+    participants: json["userData"] == null ? [] : List<Participant>.from(json["userData"]!.map((x) => Participant.fromJson(x))),
     eventDocBase64: json["event_doc_base64"],
   );
 
@@ -119,7 +119,7 @@ class EventList {
     "created_at": createdAt?.toIso8601String(),
     "updated_at": updatedAt?.toIso8601String(),
     "created_by_name": createdByName,
-    "participants": participants == null ? [] : List<dynamic>.from(participants!.map((x) => x.toJson())),
+    "userData": participants == null ? [] : List<dynamic>.from(participants!.map((x) => x.toJson())),
     "event_doc_base64": eventDocBase64,
   };
 }

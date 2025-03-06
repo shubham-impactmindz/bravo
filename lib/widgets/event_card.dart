@@ -1,7 +1,16 @@
 import 'package:bravo/app/constants/app_colors/app_colors.dart';
+import 'package:bravo/app/modules/models/user_chat_model.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+
+import '../app/modules/controllers/chat_controller.dart';
 
 class EventCard extends StatelessWidget {
+
+  final AllMessage message;
+  final ChatController controller = Get.put(ChatController());
+  EventCard(this.message, {super.key});
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -15,14 +24,14 @@ class EventCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Design Event',
+            message.title??'',
             style: TextStyle(fontSize: 16,color: AppColors.calendarColor),
           ),
           SizedBox(height: 5),
-          Text('Lotum one GmbH is an Android game developer that has been active since 2019.',
+          Text(message.description??'',
               style: TextStyle(color: AppColors.calendarColor),),
           SizedBox(height: 10),
-          Row(
+          (message.userStatus??'').isEmpty?Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
 
@@ -36,6 +45,8 @@ class EventCard extends StatelessWidget {
                 child: GestureDetector(
                   onTap:(){
 
+                    controller.updateEventStatus(eventId:message.eventId,status: 'rejected');
+                    controller.update();
                   },
                   child: const Text(
                     'Reject',
@@ -55,7 +66,8 @@ class EventCard extends StatelessWidget {
                 padding: EdgeInsets.all(10),
                 child: GestureDetector(
                   onTap:(){
-
+                    controller.updateEventStatus(eventId:message.eventId,status: 'accepted');
+                    controller.update();
                   },
                   child: const Text(
                     'Accept',
@@ -70,7 +82,11 @@ class EventCard extends StatelessWidget {
 
 
             ],
-          ),
+          ):
+
+          Text(message.userStatus?.toUpperCase()??'',
+            style: TextStyle(fontSize: 16,fontWeight: FontWeight.bold,color: message.userStatus=="accepted"?Colors.green:
+            Colors.red),),
         ],
       ),
     );

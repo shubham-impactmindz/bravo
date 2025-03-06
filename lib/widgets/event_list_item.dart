@@ -18,8 +18,6 @@ class EventListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
-    final screenWidth = MediaQuery.of(context).size.width;
 
     return Container(
       decoration: const BoxDecoration(
@@ -45,11 +43,11 @@ class EventListItem extends StatelessWidget {
             ),
             Row(
               children: [
-                Image.asset(
-                  'assets/images/messenger.png', // Make sure path is correct
-                  height: 20,
-                ),
-                SizedBox(width: screenWidth * 0.01),
+                // Image.asset(
+                //   'assets/images/messenger.png', // Make sure path is correct
+                //   height: 20,
+                // ),
+                // SizedBox(width: screenWidth * 0.01),
                 PopupMenuButton<String>(
                   onSelected: (value) {
                     if (value == 'Edit') {
@@ -62,14 +60,15 @@ class EventListItem extends StatelessWidget {
                         context: context,
                         builder: (BuildContext context) {
                           return CustomAlertDialog(
+                            event:event,
+                            controller:editController,
                             title: 'Delete Event',
                             message: 'Please confirm you wish to delete this event?',
                             onCancel: () {
                               Navigator.of(context).pop();
                             },
                             onConfirm: () {
-                              // controller.deleteEvent(event); // Implement delete logic
-                              Navigator.of(context).pop();
+
                             },
                           );
                         },

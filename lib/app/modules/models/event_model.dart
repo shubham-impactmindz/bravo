@@ -49,7 +49,7 @@ class Event {
       createdBy: json['created_by_name'],
       eventDoc: (json['event_doc'] as List?)?.cast<String>(), // Casting to List<String>
       eventNotes: json['event_notes'],
-      participants: (json['participants'] as List?)?.map((p) => Participant.fromJson(p)).toList(),
+      participants: (json['userData'] as List?)?.map((p) => Participant.fromJson(p)).toList(),
       groups: (json['groups'] as List?)?.map((g) => GroupList.fromJson(g)).toList(),
       users: (json['users'] as List?)?.map((u) => User.fromJson(u)).toList(),
     );

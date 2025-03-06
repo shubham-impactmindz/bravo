@@ -1,5 +1,6 @@
 import 'package:bravo/app/modules/controllers/profile_controller.dart';
 import 'package:bravo/app/modules/routes/app_pages.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:bravo/app/constants/app_colors/app_colors.dart';
 import 'package:get/get.dart';
@@ -64,25 +65,71 @@ class ProfileScreen extends StatelessWidget {
                                 child: Column(
                                   children: [
                                     SizedBox(height: screenHeight * 0.02),
-                                    Row(
-                                      children: [
-                                        CircleAvatar(
-                                          radius: 35,
-                                          backgroundImage:
-                                          (controller.user.value?.userInfo?.profilePicture??"").isNotEmpty?
-                                          NetworkImage(controller.user.value?.userInfo?.profilePicture??""):
-                                          AssetImage("assets/images/user.png"),
-                                        ),
-                                        SizedBox(width: 12),
-                                        Text(
-                                          controller.user.value?.userInfo?.fullname ?? "", // Dynamic name
-                                          style: TextStyle(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.black,
+                                    Obx(()=>
+                                        Row(
+                                        children: [
+                                          GestureDetector(
+                                            onTap: (){
+                                              controller.pickFileOrImage();
+                                            },
+                                            child: Stack(
+                                              alignment: Alignment.center,
+                                              children: [
+                                                CircleAvatar(
+                                                  radius:35,
+                                                  child: CachedNetworkImage(
+                                                    imageUrl: controller.user.value?.userInfo?.profilePicture??"",
+                                                    imageBuilder: (context, imageProvider) => Container(
+                                                      decoration: BoxDecoration(
+                                                        shape: BoxShape.circle, // Ensures circular shape
+                                                        image: DecorationImage(
+                                                          image: imageProvider,
+                                                          fit: BoxFit.cover,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    placeholder: (context, url) => const CircularProgressIndicator(),
+                                                    errorWidget: (context, url, error) {
+                                                      String? initials = (controller.user.value?.userInfo?.fullname?.isNotEmpty ?? false) ? controller.user.value?.userInfo?.fullname![0].toUpperCase() : '?';
+
+                                                      return CircleAvatar(
+                                                        radius: 35,
+                                                        backgroundColor: AppColors.calendarColor, // Red background
+                                                        child: Text(
+                                                          initials??'',
+                                                          style: const TextStyle(
+                                                            color: AppColors.white, // White text for contrast
+                                                            fontSize: 20,
+                                                            fontWeight: FontWeight.bold,
+                                                          ),
+                                                        ),
+                                                      );
+                                                    },
+                                                  ),
+                                                ),
+                                                Positioned(
+                                                  bottom: 0,
+                                                  right: 0,
+                                                  child: CircleAvatar(
+                                                    radius: 10,
+                                                    backgroundColor: Colors.black54,
+                                                    child: Icon(Icons.edit,color: Colors.white,size: 10,),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
                                           ),
-                                        ),
-                                      ],
+                                          SizedBox(width: 12),
+                                          Text(
+                                            controller.user.value?.userInfo?.fullname ?? "", // Dynamic name
+                                            style: TextStyle(
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.black,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                     SizedBox(height: screenHeight * 0.02),
                                     _buildProfileCard(controller),

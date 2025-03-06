@@ -1,0 +1,250 @@
+import 'dart:io';
+
+import 'package:bravo/app/modules/models/student_detail_model.dart';
+import 'package:bravo/app/modules/models/user_details_model.dart';
+import 'package:bravo/app/modules/views/student_detail_screen.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
+
+import '../../constants/app_colors/app_colors.dart';
+import '../apiservice/api_service.dart';
+import '../models/user_chat_model.dart';
+
+class ChatIndividualController extends GetxController {
+  var isLoading = false.obs;
+  final ApiService _apiService = ApiService();
+  var page = 1.obs;
+  var limit = 50.obs;
+  var chatId = 0.obs;
+  var chatType = "".obs;
+  var chats = <Chat>[].obs;
+  ScrollController scrollController = ScrollController();
+  RxBool hasMoreData = false.obs;
+  RxBool isMoreLoading = false.obs;
+  var pickedFile = File('').obs;
+  var documentPath = ''.obs;
+  var fileName = ''.obs;
+  var initialFileName = ''.obs;
+  late Map<String, dynamic> requestBody;
+  final TextEditingController messageController = TextEditingController();
+  var userId="".obs;
+  var user = Rxn<StudentDetailModel>();
+
+  @override
+  Future<void> onInit() async {
+    super.onInit();
+    await fetchUserChats();
+
+    scrollController.addListener(() async {
+      if (scrollController.position.pixels == scrollController.position.minScrollExtent && hasMoreData.value) {
+        await fetchMoreChats();
+      }
+    });
+  }
+
+  Future<void> pickFileOrImage() async {
+    showDialog(
+      context: Get.context!,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Center(child: const Text("Choose an option")),
+          actions: <Widget>[
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                GestureDetector(
+                  onTap: () async {
+                    Navigator.of(context).pop(); // Close the dialog
+                    await _pickFile(ImageSource.gallery);
+                  },
+                  child: Column(children: [
+                    Icon(Icons.image_outlined,color: Colors.black,size: 50,),
+                    Text('Pick File'),
+                  ],),
+                ),
+                SizedBox(width: 30,),
+                GestureDetector(
+                  onTap: () async {
+                    Navigator.of(context).pop(); // Close the dialog
+                    await _pickFile(ImageSource.camera);
+                  },
+                  child: Column(children: [
+                    Icon(Icons.camera_alt_outlined,color: Colors.black,size: 50,),
+                    Text('Take Photo'),
+                  ],),
+                ),
+              ],
+            ),
+
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _pickFile(ImageSource source) async {
+    try {
+      FilePickerResult? result;
+
+      if (source == ImageSource.gallery) {
+        result = await FilePicker.platform.pickFiles(
+          type: FileType.any, // or FileType.image, FileType.pdf, etc.
+          allowMultiple: false,
+        );
+      } else if (source == ImageSource.camera) {
+        final ImagePicker picker = ImagePicker();
+        final XFile? pickedImage = await picker.pickImage(source: source);
+        if (pickedImage != null) {
+          result = FilePickerResult([PlatformFile(path: pickedImage.path, name: pickedImage.name, size: await pickedImage.length())]);
+        }
+      }
+
+      if (result != null) {
+        pickedFile.value = File(result.files.first.path!);
+        documentPath.value = result.files.first.path!;
+        fileName.value = result.files.first.name;
+        await sendUserMessage(messageTypeId:"3",parentMessageId:"");
+      } else {
+        // User canceled the picker
+      }
+    } catch (e) {
+      Get.snackbar("Error", "Could not pick file: $e");
+    }
+  }
+
+  void resetFile() {
+    fileName.value = initialFileName.value; // Restore initial file name
+    pickedFile.value = File('');
+  }
+
+  Future<void> sendUserMessage({String? messageTypeId, String? parentMessageId}) async {
+    isLoading.value = true;
+    try {
+      requestBody = {
+        "message_type_id": messageTypeId ?? '',
+        "content": messageTypeId == "1" ? messageController.text : "",
+        "parent_message_id": parentMessageId ?? '',
+        "chat_type": chatType.value,
+        "is_read": "0",
+        "group_id": chatType.value == "private" ? "" : chatId.value,
+        "receiver_id": chatType.value == "private" ? chatId.value : "",
+      };
+      var response = await _apiService.sendUserMessage(requestBody,pickedFile.value);
+      if (response.isSuccess ?? false) {
+        resetFile();
+        messageController.clear();
+        await fetchUserChats();
+      } else {
+        Get.snackbar('Error', 'Failed to send message please try again',colorText: AppColors.white,backgroundColor: AppColors.calendarColor);
+      }
+    } catch (e) {
+      Get.snackbar('Error', 'Something went wrong');
+    }finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> fetchUserChats() async {
+    isLoading.value = true;
+    try {
+      page.value = 1; // Reset page on initial load
+      var response = await _apiService.fetchUserMessage(chatType.value, chatId.value, page.value, limit.value);
+      if (response.isSuccess ?? false) {
+        chats.assignAll(response.chats ?? []);
+        hasMoreData.value = (response.chats?[0].messagesPagination?.totalPages ?? 1) > page.value;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (scrollController.hasClients && chats.isNotEmpty && chats[0].allMessages != null && chats[0].allMessages!.isNotEmpty) {
+            scrollController.jumpTo(scrollController.position.maxScrollExtent);
+          }
+        });
+      } else {
+
+      }
+    } catch (e) {
+      Get.snackbar('Error', 'Something went wrong');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> fetchUserDetail() async {
+    isLoading.value = true;
+    try {
+      page.value = 1; // Reset page on initial load
+      var response = await _apiService.fetchUserDetail(userId.value, chatId.value);
+      if (response.isSuccess ?? false) {
+        user.value = response;
+      } else {
+        // Handle error
+      }
+    } catch (e) {
+      Get.snackbar('Error', 'Something went wrong');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> fetchUserDetailById() async {
+    isLoading.value = true;
+    try {
+      page.value = 1; // Reset page on initial load
+      var response = await _apiService.fetchUserDetailById(userId.value);
+      if (response.isSuccess ?? false) {
+        user.value = response;
+      } else {
+        // Handle error
+      }
+    } catch (e) {
+      Get.snackbar('Error', 'Something went wrong');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> fetchMoreChats() async {
+    if (isMoreLoading.value || !hasMoreData.value) return;
+
+    isMoreLoading.value = true;
+    try {
+      page++;
+      var response = await _apiService.fetchUserMessage(chatType.value,chatId.value,page.value, limit.value);
+      if (response.isSuccess ?? false) {
+        if (response.chats!.isNotEmpty) {
+          chats.addAll(response.chats!);
+        } else {
+          hasMoreData.value = false;
+        }
+      } else {
+        // Get.snackbar('Error', response.message ?? 'Failed to load more chats');
+      }
+    } catch (e) {
+      Get.snackbar('Error', 'Something went wrong');
+    } finally {
+      isMoreLoading.value = false;
+    }
+  }
+
+  @override
+  void onClose() {
+    scrollController.dispose();
+    super.onClose();
+  }
+
+  void showScrollNotification() {
+    Get.snackbar(
+      'New Messages',
+      'Scrolled to the latest message',
+      colorText: AppColors.white,
+      backgroundColor: AppColors.calendarColor,
+      snackPosition: SnackPosition.BOTTOM,
+      duration: Duration(seconds: 1),
+    );
+  }
+
+  void showErrorSnackbar(String message) {
+    Get.snackbar('Error', message, colorText: AppColors.white, backgroundColor: AppColors.calendarColor);
+  }
+}

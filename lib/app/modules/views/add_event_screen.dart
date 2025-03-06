@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:multi_select_flutter/chip_display/multi_select_chip_display.dart';
@@ -172,69 +174,90 @@ class AddEventScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('File*', style: const TextStyle(fontWeight: FontWeight.w400, color: AppColors.textLightColor)),
+        const Text('Files*', style: TextStyle(fontWeight: FontWeight.w400, color: AppColors.textLightColor)),
         const SizedBox(height: 5),
-        Obx(() =>
-        !controller.showFileName.value // Show file name with cross only when a file is selected
-            ? GestureDetector(
-          onTap: () {
-            controller.pickFileOrImage();
-          },
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.grey),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    'Please Choose File',
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: AppColors.textLightColor),
-                  ),
+        Obx(() => Column(
+          children: [
+            // 📂 Grid to Show Selected Files
+            if (controller.pickedFiles.isNotEmpty)
+              GridView.builder(
+                shrinkWrap: true,
+                physics: NeverScrollableScrollPhysics(),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3, // 3 columns
+                  crossAxisSpacing: 10,
+                  mainAxisSpacing: 10,
                 ),
+                itemCount: controller.pickedFiles.length,
+                itemBuilder: (context, index) {
+                  File file = controller.pickedFiles[index];
+                  String fileName = controller.fileNames[index];
+                  bool isImage = fileName.endsWith('.jpg') || fileName.endsWith('.jpeg') || fileName.endsWith('.png');
 
+                  return Stack(
+                    children: [
+                      // Show Image Preview or File Icon
+                      Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.grey),
+                        ),
+                        child: isImage
+                            ? ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.file(file, fit: BoxFit.cover),
+                        )
+                            : Center(
+                          child: Icon(Icons.insert_drive_file, size: 40, color: Colors.grey),
+                        ),
+                      ),
+                      // ❌ Remove Button
+                      Positioned(
+                        top: 0,
+                        right: 0,
+                        child: GestureDetector(
+                          onTap: () => controller.removeFile(index),
+                          child: Container(
+                            padding: EdgeInsets.all(5),
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(Icons.close, color: Colors.white, size: 18),
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            const SizedBox(height: 10),
 
-                Icon(Icons.file_copy),
-              ],
-            ),
-          ),
-        )
-            : GestureDetector(
-          onTap: () {
-            controller.pickFileOrImage();
-          },
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.grey),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    controller.fileName.value,
-                    style: TextStyle(fontSize: 16, color: Colors.black),
-                  ),
+            // ➕ Button to Add More Files
+            GestureDetector(
+              onTap: () => controller.pickFilesOrImages(),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey),
                 ),
-
-                IconButton(
-                  icon: const Icon(Icons.clear),
-                  onPressed: () {
-                    controller.resetFile(); // Call resetFile instead of clearFile
-                  },
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Add Files/Images',
+                        style: TextStyle(color: AppColors.textLightColor),
+                      ),
+                    ),
+                    Icon(Icons.add),
+                  ],
                 ),
-              ],
+              ),
             ),
-          ),
-        ),
-        ),
+          ],
+        )),
         const SizedBox(height: 10),
       ],
     );

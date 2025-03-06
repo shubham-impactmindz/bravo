@@ -46,6 +46,12 @@ dependencies:
   file_picker:
   image_picker:
   flutter_pdfview:
+  firebase_core:
+  firebase_messaging:
+  googleapis_auth:
+  app_settings:
+  flutter_local_notifications:
+  cached_network_image:
 
 dev_dependencies:
   flutter_test:

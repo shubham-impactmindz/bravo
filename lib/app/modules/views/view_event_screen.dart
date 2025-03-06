@@ -5,7 +5,6 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import '../models/event_model.dart';
-import 'package:webview_flutter/webview_flutter.dart';
 import 'dart:io';
 
 import 'file_preview_screen.dart'; // Import dart:io for File

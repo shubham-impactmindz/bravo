@@ -167,70 +167,61 @@ class EditEventScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('File*', style: const TextStyle(fontWeight: FontWeight.w400, color: AppColors.textLightColor)),
+        Text('Files*', style: TextStyle(fontWeight: FontWeight.w400, color: AppColors.textLightColor)),
         const SizedBox(height: 5),
-        Obx(() =>
-        !controller.showFileName.value // Show file name with cross only when a file is selected
-            ? GestureDetector(
+        GestureDetector(
           onTap: () {
             controller.pickFileOrImage();
           },
-              child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-                        decoration: BoxDecoration(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+            decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(8),
               border: Border.all(color: Colors.grey),
-                        ),
-                child: Row(
-                          children: [
-                Expanded(
-                  child: Text(
-                    controller.fileName.value,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: Colors.black),
-                  ),
-                ),
-
-
-                Icon(Icons.file_copy),
-                          ],
-                        ),
-              ),
-            )
-            : GestureDetector(
-          onTap: () {
-            controller.pickFileOrImage();
-          },
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        controller.fileName.value,
-                        style: TextStyle(fontSize: 16, color: Colors.black),
-                      ),
-                    ),
-
-                    IconButton(
-                      icon: const Icon(Icons.clear),
-                      onPressed: () {
-                        controller.resetFile(); // Call resetFile instead of clearFile
-                      },
-                    ),
-                  ],
-                ),
-              ),
             ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.add, color: Colors.black),
+                SizedBox(width: 10),
+                Text('Add Files'),
+              ],
+            ),
+          ),
         ),
         const SizedBox(height: 10),
+        Obx(() => GridView.builder(
+          shrinkWrap: true,
+          physics: NeverScrollableScrollPhysics(),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 3,
+            crossAxisSpacing: 8,
+            mainAxisSpacing: 8,
+          ),
+          itemCount: controller.previousFiles.length + controller.pickedFiles.length,
+          itemBuilder: (context, index) {
+            bool isPrevious = index < controller.previousFiles.length;
+            return Stack(
+              alignment: Alignment.topRight,
+              children: [
+                isPrevious
+                    ? Image.network(controller.previousFiles[index], fit: BoxFit.cover)
+                    : Image.file(controller.pickedFiles[index - controller.previousFiles.length], fit: BoxFit.cover),
+                GestureDetector(
+                  onTap: () => isPrevious ? controller.removePreviousFile(index) : controller.removeFile(index - controller.previousFiles.length),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.red,
+                    ),
+                    child: Icon(Icons.close, color: Colors.white, size: 18),
+                  ),
+                ),
+              ],
+            );
+          },
+        )),
       ],
     );
   }

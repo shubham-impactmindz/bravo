@@ -3,11 +3,16 @@ import 'dart:io';
 import 'package:bravo/app/modules/models/add_event_model.dart';
 import 'package:bravo/app/modules/models/categories_list_model.dart';
 import 'package:bravo/app/modules/models/group_list_model.dart';
+import 'package:bravo/app/modules/models/send_message_model.dart';
+import 'package:bravo/app/modules/models/student_detail_model.dart';
+import 'package:bravo/app/modules/models/update_profile_picture_model.dart';
+import 'package:bravo/app/modules/models/user_chats_model.dart';
 import 'package:bravo/app/modules/models/user_details_model.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/event_model.dart';
 import '../models/unique_code_model.dart';
+import '../models/user_chat_model.dart';
 
 class ApiService {
   final String baseUrl = "https://impactmindz.in/client/artie/bravo/ci_back_end/api";
@@ -97,15 +102,15 @@ class ApiService {
       if (response.statusCode == 200) {
         return UserDetailsModel.fromJson(jsonDecode(response.body));
       } else {
-        return UserDetailsModel(isSuccess: false, message: "Failed to fetch data", groupInfo: '');
+        return UserDetailsModel(isSuccess: false, message: "Failed to fetch data");
       }
     } catch (e) {
-      return UserDetailsModel(isSuccess: false, message: "Error: $e", groupInfo: '');
+      return UserDetailsModel(isSuccess: false, message: "Error: $e");
     }
   }
 
   Future<GroupsListModel> fetchGroupList() async {
-    final url = Uri.parse('$baseUrl/GetAllGroups');
+    final url = Uri.parse('$baseUrl/GetGroupsOfUsers');
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token') ?? '';
 
@@ -152,7 +157,7 @@ class ApiService {
     }
   }
 
-  Future<AddEventModel> addEvent(Map<String, dynamic> requestBody, File files) async {
+  Future<AddEventModel> addEvent(Map<String, dynamic> requestBody, List<File> value) async {
     final url = Uri.parse('$baseUrl/Events/create_event');
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token') ?? '';
@@ -174,8 +179,16 @@ class ApiService {
       request.fields['group_id'] = requestBody['group_id'] ?? '';
       request.fields['user_id'] = requestBody['user_id'] ?? '';
       request.fields['event_notes'] = requestBody['event_notes'] ?? '';
-      request.files.add(await http.MultipartFile.fromPath('event_doc[]', files.path, filename: files.path.split('/').last));
-
+      // Add multiple files
+      for (var file in value) {
+        request.files.add(
+          await http.MultipartFile.fromPath(
+            'event_doc[]',
+            file.path,
+            filename: file.path.split('/').last,
+          ),
+        );
+      }
       // Send request
       var response = await request.send();
       var responseBody = await response.stream.bytesToString();
@@ -191,7 +204,7 @@ class ApiService {
     }
   }
 
-  Future<AddEventModel> updateEvent(Map<String, dynamic> requestBody, File files, bool isFilePicked, String eventId) async {
+  Future<AddEventModel> updateEvent(Map<String, dynamic> requestBody, List<File> value, bool isFilePicked, String eventId) async {
     final url = Uri.parse('$baseUrl/Events/update_event/$eventId');
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token') ?? '';
@@ -215,10 +228,15 @@ class ApiService {
       request.fields['event_notes'] = requestBody['event_notes'] ?? '';
 
       if(isFilePicked) {
-        request.files.add(await http.MultipartFile.fromPath(
-            'event_doc[]', files.path, filename: files.path
-            .split('/')
-            .last));
+        for (var file in value) {
+          request.files.add(
+            await http.MultipartFile.fromPath(
+              'event_doc[]',
+              file.path,
+              filename: file.path.split('/').last,
+            ),
+          );
+        }
       }
       // Send request
       var response = await request.send();
@@ -232,6 +250,231 @@ class ApiService {
       }
     } catch (e) {
       return AddEventModel(isSuccess: false, message: "Error: $e");
+    }
+  }
+
+  Future<UpdateProfilePictureModel> deleteEvent(String eventId) async {
+    final url = Uri.parse('$baseUrl/Events/delete_event?event_id=$eventId');
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token') ?? '';
+
+    try {
+
+      final response = await http.get(
+        url,
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return UpdateProfilePictureModel.fromJson(jsonDecode(response.body));
+      } else {
+        return UpdateProfilePictureModel(isSuccess: false, message: "Failed to create event");
+      }
+    } catch (e) {
+      return UpdateProfilePictureModel(isSuccess: false, message: "Error: $e");
+    }
+  }
+
+  Future<UpdateProfilePictureModel> updateProfilePicture(File file) async {
+    final url = Uri.parse('$baseUrl/Update_UserProfile/update_profile_picture');
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token') ?? '';
+
+    try {
+
+      var request = http.MultipartRequest('POST', url);
+      request.headers['Authorization'] = 'Bearer $token';
+      request.headers['Content-Type'] = 'multipart/form-data';
+
+      // Add text fields
+      request.files.add(await http.MultipartFile.fromPath(
+          'profile_picture', file.path, filename: file.path
+          .split('/')
+          .last));
+
+      // Send request
+      var response = await request.send();
+      var responseBody = await response.stream.bytesToString();
+      var decodedResponse = jsonDecode(responseBody);
+
+      if (response.statusCode == 200) {
+        return UpdateProfilePictureModel.fromJson(decodedResponse);
+      } else {
+        return UpdateProfilePictureModel(isSuccess: false, message: "Failed to update profile picture");
+      }
+    } catch (e) {
+      return UpdateProfilePictureModel(isSuccess: false, message: "Error: $e");
+    }
+  }
+
+  Future<UserChatsModel> fetchMessages(int page, int limit) async {
+    final url = Uri.parse('$baseUrl/users_details?page=$page&limit=$limit');
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token') ?? '';
+
+    try {
+
+      final response = await http.get(
+        url,
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return UserChatsModel.fromJson(jsonDecode(response.body));
+      } else {
+        return UserChatsModel(isSuccess: false, message: "Failed to create event");
+      }
+    } catch (e) {
+      return UserChatsModel(isSuccess: false, message: "Error: $e");
+    }
+  }
+
+  Future<UserChatModel> fetchUserMessage(String chatType,int chatId,int page, int limit) async {
+    final url = Uri.parse('$baseUrl/Messages/get_all_messages?chatType=$chatType&id=$chatId&page=$page&limit=$limit');
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token') ?? '';
+
+    try {
+
+      final response = await http.get(
+        url,
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return UserChatModel.fromJson(jsonDecode(response.body));
+      } else {
+        return UserChatModel();
+      }
+    } catch (e) {
+      return UserChatModel();
+    }
+  }
+
+  Future<SendMessageModel> sendUserMessage(Map<String, dynamic> requestBody, File files) async {
+    final url = Uri.parse('$baseUrl/Messages/send_message');
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token') ?? '';
+
+    try {
+
+      var request = http.MultipartRequest('POST', url);
+      request.headers['Authorization'] = 'Bearer $token';
+      request.headers['Content-Type'] = 'multipart/form-data';
+
+      // ✅ Convert all values to String to prevent type errors
+      request.fields['message_type_id'] = requestBody['message_type_id']?.toString() ?? '';
+      request.fields['parent_message_id'] = requestBody['parent_message_id']?.toString() ?? '';
+      request.fields['chat_type'] = requestBody['chat_type']?.toString() ?? '';
+      request.fields['is_read'] = requestBody['is_read']?.toString() ?? '0';
+      request.fields['group_id'] = requestBody['group_id']?.toString() ?? '';
+      request.fields['receiver_id'] = requestBody['receiver_id']?.toString() ?? '';
+
+      // ✅ Only add file if it's not null
+      if (files.path.isNotEmpty) {
+        request.files.add(await http.MultipartFile.fromPath('content', files.path, filename: files.path.split('/').last));
+      }else{
+        request.fields['content'] = requestBody['content']?.toString() ?? '';
+      }
+
+      // Send request
+      var response = await request.send();
+      var responseBody = await response.stream.bytesToString();
+      var decodedResponse = jsonDecode(responseBody);
+
+
+      if (response.statusCode == 200) {
+        return SendMessageModel.fromJson(decodedResponse);
+      } else {
+        return SendMessageModel();
+      }
+    } catch (e) {
+      return SendMessageModel();
+    }
+  }
+
+  Future<StudentDetailModel> fetchUserDetail(String userId,int chatId) async {
+    final url = Uri.parse('$baseUrl/GroupParticipant/$chatId?userId=$userId');
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token') ?? '';
+
+    try {
+
+      final response = await http.get(
+        url,
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return StudentDetailModel.fromJson(jsonDecode(response.body));
+      } else {
+        return StudentDetailModel();
+      }
+    } catch (e) {
+      return StudentDetailModel();
+    }
+  }
+
+  Future<StudentDetailModel> fetchUserDetailById(String userId) async {
+    final url = Uri.parse('$baseUrl/GetUserByID/$userId');
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token') ?? '';
+
+    try {
+
+      final response = await http.get(
+        url,
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return StudentDetailModel.fromJson(jsonDecode(response.body));
+      } else {
+        return StudentDetailModel();
+      }
+    } catch (e) {
+      return StudentDetailModel();
+    }
+  }
+
+  Future<SendMessageModel> updateEventStatus(Map<String, dynamic> requestBody,) async {
+    final url = Uri.parse('$baseUrl/Events/update_participant_status');
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token') ?? '';
+
+    try {
+
+      final response = await http.post(
+        url,
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/x-www-form-urlencoded', // Correct for form data
+        },
+        body: requestBody.map((key, value) => MapEntry(key, value.toString())), // Convert all values to String
+      );
+
+      if (response.statusCode == 200) {
+        return SendMessageModel.fromJson(jsonDecode(response.body));
+      } else {
+        return SendMessageModel();
+      }
+    } catch (e) {
+      return SendMessageModel();
     }
   }
 }

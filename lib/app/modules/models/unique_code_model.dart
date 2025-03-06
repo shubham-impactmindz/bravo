@@ -26,6 +26,7 @@ class UserModel {
   final String userName;
   final String userEmail;
   final String role;
+  final String deviceToken;
   final int iat;
   final int exp;
 
@@ -34,6 +35,7 @@ class UserModel {
     required this.userName,
     required this.userEmail,
     required this.role,
+    required this.deviceToken,
     required this.iat,
     required this.exp,
   });
@@ -44,6 +46,7 @@ class UserModel {
       userName: json['user_name'] ?? '',
       userEmail: json['user_email'] ?? '',
       role: json['role'] ?? '',
+      deviceToken: json['device_token'] ?? '',
       iat: json['iat'] ?? 0,
       exp: json['exp'] ?? 0,
     );

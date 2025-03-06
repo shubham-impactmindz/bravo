@@ -30,9 +30,10 @@ class AddEventController extends GetxController {
   var groups = <GroupList>[].obs; // Changed to a list of GroupList instead of Rxn<GroupList>
   var category = <CategoryList>[].obs;
   final ApiService _apiService=ApiService();
-  var pickedFile = File('').obs;
+  // 🆕 Multiple File Picker
+  var pickedFiles = <File>[].obs; // Store selected files
+  var fileNames = <String>[].obs; // Store file names
   var documentPath = ''.obs;
-  var fileName = ''.obs;
   var initialFileName = ''.obs; // Store the initial file name
   var showFileName = false.obs;
   var isLoading=false.obs;
@@ -116,26 +117,43 @@ class AddEventController extends GetxController {
     }
   }
 
-  Future<void> pickFileOrImage() async {
+  // 🆕 Pick multiple images or files
+  Future<void> pickFilesOrImages() async {
     showDialog(
       context: Get.context!,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text("Choose an option"),
+          title: const Center(child: Text("Choose an option")),
           actions: <Widget>[
-            TextButton(
-              child: const Text("Pick File"),
-              onPressed: () async {
-                Navigator.of(context).pop(); // Close the dialog
-                await _pickFile(ImageSource.gallery);
-              },
-            ),
-            TextButton(
-              child: const Text("Take Photo"),
-              onPressed: () async {
-                Navigator.of(context).pop(); // Close the dialog
-                await _pickFile(ImageSource.camera);
-              },
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                GestureDetector(
+                  onTap: () async {
+                    Navigator.of(context).pop();
+                    await _pickFiles();
+                  },
+                  child: Column(
+                    children: [
+                      const Icon(Icons.file_copy, color: Colors.black, size: 50),
+                      const Text('Pick Files'),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 30),
+                GestureDetector(
+                  onTap: () async {
+                    Navigator.of(context).pop();
+                    await _captureImagesFromCamera();
+                  },
+                  child: Column(
+                    children: [
+                      const Icon(Icons.camera_alt, color: Colors.black, size: 50),
+                      const Text('Capture Images'),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ],
         );
@@ -143,42 +161,59 @@ class AddEventController extends GetxController {
     );
   }
 
-  Future<void> _pickFile(ImageSource source) async {
+  // 📂 Pick multiple files (PDF, DOC, etc.)
+  Future<void> _pickFiles() async {
     try {
-      FilePickerResult? result;
-
-      if (source == ImageSource.gallery) {
-        result = await FilePicker.platform.pickFiles(
-          type: FileType.any, // or FileType.image, FileType.pdf, etc.
-          allowMultiple: false,
-        );
-      } else if (source == ImageSource.camera) {
-        final ImagePicker picker = ImagePicker();
-        final XFile? pickedImage = await picker.pickImage(source: source);
-        if (pickedImage != null) {
-          result = FilePickerResult([PlatformFile(path: pickedImage.path, name: pickedImage.name, size: await pickedImage.length())]);
-        }
-      }
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.any,
+        allowMultiple: true,
+      );
 
       if (result != null) {
-        pickedFile.value = File(result.files.first.path!);
-        documentPath.value = result.files.first.path!;
-        fileName.value = result.files.first.name;
-        showFileName.value = true;
-        fileController.text = fileName.value;
-      } else {
-        // User canceled the picker
+        for (var file in result.files) {
+          pickedFiles.add(File(file.path!));
+          fileNames.add(file.name);
+        }
       }
     } catch (e) {
-      Get.snackbar("Error", "Could not pick file: $e");
+      Get.snackbar("Error", "Could not pick files: $e");
     }
   }
 
-  void resetFile() {
-    fileName.value = ''; // Restore initial file name
-    showFileName.value = false; // Hide the row
-    fileController.text = fileName.value;
-    pickedFile.value = File('');
+  // 📷 Capture multiple images using the camera
+  Future<void> _captureImagesFromCamera() async {
+    final ImagePicker picker = ImagePicker();
+    try {
+      List<XFile> images = [];
+
+      // Capture multiple images in a loop
+      bool capturing = true;
+      while (capturing) {
+        final XFile? image = await picker.pickImage(source: ImageSource.camera);
+        if (image != null) {
+          images.add(image);
+        } else {
+          // Stop capturing when the user cancels
+          capturing = false;
+        }
+      }
+
+      // Add captured images to the list
+      if (images.isNotEmpty) {
+        for (var image in images) {
+          pickedFiles.add(File(image.path));
+          fileNames.add(image.name);
+        }
+      }
+    } catch (e) {
+      Get.snackbar("Error", "Could not capture images: $e");
+    }
+  }
+
+
+  void resetFiles() {
+    pickedFiles.clear();
+    fileNames.clear();
   }
 
   void resetForm() {
@@ -218,7 +253,7 @@ class AddEventController extends GetxController {
       showErrorSnackbar('Please select groups');
       return;
     }
-    if (fileName.value.isEmpty) {
+    if (fileNames.isEmpty) {
       showErrorSnackbar('Please select file');
       return;
     }
@@ -255,11 +290,11 @@ class AddEventController extends GetxController {
         "event_notes": eventNotesController.text,
       };
 
-      var response = await _apiService.addEvent(requestBody, pickedFile.value);
+      var response = await _apiService.addEvent(requestBody, pickedFiles);
 
       if (response.isSuccess ?? false) {
         Get.snackbar('Success', response.message ?? '', colorText: AppColors.white, backgroundColor: AppColors.calendarColor);
-        resetFile();
+        resetFiles();
         resetForm();
         calendarController.fetchEvents();
       } else {
@@ -287,5 +322,11 @@ class AddEventController extends GetxController {
 
   void showErrorSnackbar(String message) {
     Get.snackbar('Error', message, colorText: AppColors.white, backgroundColor: AppColors.calendarColor);
+  }
+
+  // 🗑 Remove a specific file
+  void removeFile(int index) {
+    pickedFiles.removeAt(index);
+    fileNames.removeAt(index);
   }
 }

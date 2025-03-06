@@ -3,23 +3,28 @@ import 'package:bravo/app/modules/routes/app_pages.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../apiservice/api_service.dart';
+import '../apiservice/notification_service.dart';
 import '../models/unique_code_model.dart';
 
 class UniqueCodeController extends GetxController {
   var isLoading = false.obs;
   var user = Rxn<UserModel>();
   final ApiService _apiService = ApiService();
+  NotificationService notificationService= NotificationService();
 
   Future<void> fetchUserData(String authCode) async {
+    notificationService.requestNotificationPermission();
+    notificationService.foregroundMessage();
+    String? token=await notificationService.getDeviceToken();
     if (authCode.isEmpty) {
-      Get.snackbar('Error', 'Unique code cannot be empty');
+      Get.snackbar('Error', 'Unique code cannot be empty',colorText: AppColors.white,backgroundColor: AppColors.calendarColor);
       return;
     }
 
     isLoading.value = true;
     update();
     try {
-      var response = await _apiService.fetchUserData({"auth_code": authCode});
+      var response = await _apiService.fetchUserData({"auth_code": authCode,"device_token":token});
       if (response.isSuccess) {
         user.value = response.userInfo;
 

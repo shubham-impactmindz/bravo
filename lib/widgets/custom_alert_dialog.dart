@@ -1,14 +1,22 @@
 import 'package:bravo/app/constants/app_colors/app_colors.dart';
+import 'package:bravo/app/modules/controllers/edit_event_controller.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+
+import '../app/modules/models/event_model.dart';
 
 class CustomAlertDialog extends StatelessWidget {
+  final Event event;
   final String title;
   final String message;
   final VoidCallback onCancel;
   final VoidCallback onConfirm;
+  final EditEventController controller;
 
   const CustomAlertDialog({
     Key? key,
+    required this.event,
+    required this.controller,
     required this.title,
     required this.message,
     required this.onCancel,
@@ -68,7 +76,7 @@ class CustomAlertDialog extends StatelessWidget {
               padding: EdgeInsets.all(10),
               child: GestureDetector(
                 onTap:(){
-
+                  Get.back();
                 },
                 child: const Text(
                   'No, cancel',
@@ -86,7 +94,11 @@ class CustomAlertDialog extends StatelessWidget {
               padding: EdgeInsets.all(10),
               child: GestureDetector(
                 onTap:(){
-
+                  Get.back();
+                  controller.eventSelectedDate.value=event;
+                  controller.initializeEventData();
+                  controller.update();
+                  controller.deleteEvent();
                 },
                 child: const Text(
                   'Yes, Delete',
