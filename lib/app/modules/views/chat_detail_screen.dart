@@ -396,7 +396,7 @@ class ChatDetailScreen extends StatelessWidget {
                                 ),
                               const SizedBox(width: 5),
                               Text(
-                                _formatTime(message.timestamp.toString()),
+                                _formatTime(message.timestamp.toString(),message.deviceTime),
                                 style: const TextStyle(
                                     color: AppColors.textLightColor,
                                     fontSize: 12),
@@ -414,18 +414,42 @@ class ChatDetailScreen extends StatelessWidget {
   }
 
   // Helper function to parse and format time
-  String _formatTime(String timeString) {
+  String _formatTime(String? timestamp, String? deviceTime) {
     try {
-      // Adjust the format string below to match your actual time format
-      DateFormat originalFormat = DateFormat(
-          "HH:mm:ss"); // Example: If your time is like "2024-07-24 14:30:00"
-      DateTime dateTime = originalFormat.parse(timeString.split(" ")[1]);
+      DateTime now = DateTime.now();
 
-      return DateFormat('hh:mm a').format(dateTime);
+      if (deviceTime != null && deviceTime.isNotEmpty) {
+        // Parse device_time correctly
+        DateTime deviceDateTime = DateFormat("dd/MM/yyyy hh:mm a").parse(deviceTime);
+
+        if (deviceDateTime.year == now.year &&
+            deviceDateTime.month == now.month &&
+            deviceDateTime.day == now.day) {
+          // If today, return only the time
+          return DateFormat('hh:mm a').format(deviceDateTime);
+        } else {
+          // If not today, return date and time (10/03, 12:35 PM)
+          return DateFormat('dd/MM, hh:mm a').format(deviceDateTime);
+        }
+      }
+      else if (timestamp != null && timestamp.isNotEmpty) {
+        // Parse timestamp correctly
+        DateTime timestampDateTime = DateFormat("yyyy-MM-dd HH:mm:ss").parse(timestamp);
+
+        if (timestampDateTime.year == DateTime.now().year &&
+            timestampDateTime.month == DateTime.now().month &&
+            timestampDateTime.day == DateTime.now().day) {
+          // If today, return only the time
+          return DateFormat('hh:mm a').format(timestampDateTime);
+        } else {
+          // If not today, return date and time (10/03, 12:35 PM)
+          return DateFormat('dd/MM, hh:mm a').format(timestampDateTime);
+        }
+      }
     } catch (e) {
       print("Error parsing date: $e");
-      return "Invalid date"; // Or handle the error as needed
     }
+    return "Invalid date"; // Fallback for errors
   }
 
   String getMessageText(String message) {

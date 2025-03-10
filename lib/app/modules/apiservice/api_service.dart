@@ -3,10 +3,11 @@ import 'dart:io';
 import 'package:bravo/app/modules/models/add_event_model.dart';
 import 'package:bravo/app/modules/models/categories_list_model.dart';
 import 'package:bravo/app/modules/models/group_list_model.dart';
+import 'package:bravo/app/modules/models/notification_list_model.dart';
 import 'package:bravo/app/modules/models/send_message_model.dart';
 import 'package:bravo/app/modules/models/student_detail_model.dart';
 import 'package:bravo/app/modules/models/update_profile_picture_model.dart';
-import 'package:bravo/app/modules/models/user_chats_model.dart';
+import 'package:bravo/app/modules/models/user_chats_list_model.dart';
 import 'package:bravo/app/modules/models/user_details_model.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -40,7 +41,7 @@ class ApiService {
   }
 
   Future<Map<int, List<Event>>> fetchEvents(int month, int year) async {
-    final url = Uri.parse("$baseUrl/events//get_events?month=$month&year=$year");
+    final url = Uri.parse("$baseUrl/events/get_events?month=$month&year=$year");
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token') ?? '';
 
@@ -106,6 +107,30 @@ class ApiService {
       }
     } catch (e) {
       return UserDetailsModel(isSuccess: false, message: "Error: $e");
+    }
+  }
+
+  Future<NotificationListModel> fetchNotificationList(int page, int limit) async {
+    final url = Uri.parse('$baseUrl/notification/get_notifications?offset=$page&limit=$limit');
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token') ?? '';
+
+    try {
+      final response = await http.get(
+        url,
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return NotificationListModel.fromJson(jsonDecode(response.body));
+      } else {
+        return NotificationListModel(status: false);
+      }
+    } catch (e) {
+      return NotificationListModel(status: false);
     }
   }
 
@@ -179,6 +204,7 @@ class ApiService {
       request.fields['group_id'] = requestBody['group_id'] ?? '';
       request.fields['user_id'] = requestBody['user_id'] ?? '';
       request.fields['event_notes'] = requestBody['event_notes'] ?? '';
+      request.fields['device_time'] = requestBody['device_time'] ?? '';
       // Add multiple files
       for (var file in value) {
         request.files.add(
@@ -226,6 +252,7 @@ class ApiService {
       request.fields['group_id'] = requestBody['group_id'] ?? '';
       request.fields['user_id'] = requestBody['user_id'] ?? '';
       request.fields['event_notes'] = requestBody['event_notes'] ?? '';
+      request.fields['device_time'] = requestBody['device_time'] ?? '';
 
       if(isFilePicked) {
         for (var file in value) {
@@ -310,7 +337,7 @@ class ApiService {
     }
   }
 
-  Future<UserChatsModel> fetchMessages(int page, int limit) async {
+  Future<UserChatsListModel> fetchMessages(int page, int limit) async {
     final url = Uri.parse('$baseUrl/users_details?page=$page&limit=$limit');
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token') ?? '';
@@ -326,12 +353,12 @@ class ApiService {
       );
 
       if (response.statusCode == 200) {
-        return UserChatsModel.fromJson(jsonDecode(response.body));
+        return UserChatsListModel.fromJson(jsonDecode(response.body));
       } else {
-        return UserChatsModel(isSuccess: false, message: "Failed to create event");
+        return UserChatsListModel(isSuccess: false, message: "Failed to create event");
       }
     } catch (e) {
-      return UserChatsModel(isSuccess: false, message: "Error: $e");
+      return UserChatsListModel(isSuccess: false, message: "Error: $e");
     }
   }
 
@@ -378,6 +405,7 @@ class ApiService {
       request.fields['is_read'] = requestBody['is_read']?.toString() ?? '0';
       request.fields['group_id'] = requestBody['group_id']?.toString() ?? '';
       request.fields['receiver_id'] = requestBody['receiver_id']?.toString() ?? '';
+      request.fields['device_time'] = requestBody['device_time']?.toString() ?? '';
 
       // ✅ Only add file if it's not null
       if (files.path.isNotEmpty) {

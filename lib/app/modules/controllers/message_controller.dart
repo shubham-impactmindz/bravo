@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 
 import '../../constants/app_colors/app_colors.dart';
 import '../apiservice/api_service.dart';
-import '../models/user_chats_model.dart';
+import '../models/user_chats_list_model.dart';
 
 class MessageController extends GetxController {
   var messages = <Map<String, dynamic>>[].obs;
@@ -49,7 +49,7 @@ class MessageController extends GetxController {
         Get.snackbar('Error', response.message ?? 'Failed to load chats');
       }
     } catch (e) {
-      Get.snackbar('Error', 'Something went wrong');
+
     } finally {
       isLoading.value = false;
     }

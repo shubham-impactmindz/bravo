@@ -81,6 +81,7 @@ class AllMessage {
   String? messageType;
   String? messageUrl;
   DateTime? timestamp;
+  String? deviceTime;
   String? eventId;
   String? title;
   String? description;
@@ -108,6 +109,7 @@ class AllMessage {
     this.messageType,
     this.messageUrl,
     this.timestamp,
+    this.deviceTime,
     this.eventId,
     this.title,
     this.description,
@@ -136,6 +138,7 @@ class AllMessage {
     messageType: json["messageType"],
     messageUrl: json["messageUrl"],
     timestamp: json["timestamp"] == null ? null : DateTime.parse(json["timestamp"]),
+    deviceTime: json["device_time"],
     eventId: json["eventId"],
     title: json["title"],
     description: json["description"],
@@ -164,6 +167,7 @@ class AllMessage {
     "messageType": messageType,
     "messageUrl": messageUrl,
     "timestamp": timestamp?.toIso8601String(),
+    "device_time": deviceTime,
     "eventId": eventId,
     "title": title,
     "description": description,

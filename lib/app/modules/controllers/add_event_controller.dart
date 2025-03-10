@@ -277,6 +277,10 @@ class AddEventController extends GetxController {
       List<String> groupIds = selectedGroups.map((group) => group.groupId.toString()).toList();
       // List<String> userIds = ["164"]; // Adjust user ID as needed
 
+      DateTime now = DateTime.now();
+
+      // Format the date and time
+      String deviceTime = DateFormat('dd/MM/yyyy hh:mm a').format(now);
       Map<String, dynamic> requestBody = {
         "title": eventNameController.text,
         "description": announcementController.text,
@@ -288,6 +292,7 @@ class AddEventController extends GetxController {
         "group_id": groupIds.toString(),
         // "user_id": userIds.toString(),
         "event_notes": eventNotesController.text,
+        "device_time":deviceTime,
       };
 
       var response = await _apiService.addEvent(requestBody, pickedFiles);

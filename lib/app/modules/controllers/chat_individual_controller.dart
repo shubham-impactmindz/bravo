@@ -7,10 +7,12 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 
 import '../../constants/app_colors/app_colors.dart';
 import '../apiservice/api_service.dart';
 import '../models/user_chat_model.dart';
+import 'message_controller.dart';
 
 class ChatIndividualController extends GetxController {
   var isLoading = false.obs;
@@ -32,17 +34,14 @@ class ChatIndividualController extends GetxController {
   var userId="".obs;
   var user = Rxn<StudentDetailModel>();
 
-  @override
-  Future<void> onInit() async {
-    super.onInit();
-    await fetchUserChats();
 
-    scrollController.addListener(() async {
-      if (scrollController.position.pixels == scrollController.position.minScrollExtent && hasMoreData.value) {
-        await fetchMoreChats();
-      }
-    });
+  @override
+  void onInit() {
+    super.onInit();
+    fetchUserChats();
+
   }
+
 
   Future<void> pickFileOrImage() async {
     showDialog(
@@ -123,6 +122,11 @@ class ChatIndividualController extends GetxController {
   Future<void> sendUserMessage({String? messageTypeId, String? parentMessageId}) async {
     isLoading.value = true;
     try {
+      DateTime now = DateTime.now();
+
+      // Format the date and time
+      String deviceTime = DateFormat('dd/MM/yyyy hh:mm a').format(now);
+
       requestBody = {
         "message_type_id": messageTypeId ?? '',
         "content": messageTypeId == "1" ? messageController.text : "",
@@ -131,14 +135,61 @@ class ChatIndividualController extends GetxController {
         "is_read": "0",
         "group_id": chatType.value == "private" ? "" : chatId.value,
         "receiver_id": chatType.value == "private" ? chatId.value : "",
+        "device_time": deviceTime,
       };
       var response = await _apiService.sendUserMessage(requestBody,pickedFile.value);
       if (response.isSuccess ?? false) {
         resetFile();
         messageController.clear();
-        await fetchUserChats();
+        // Check if user is at the top (viewing older messages)
+        // Check if user is on the first page
+        if (page.value == 1) {
+          // Fetch only the latest messages without resetting the list
+          var newResponse = await _apiService.fetchUserMessage(chatType.value, chatId.value, 1, limit.value);
+
+          if (newResponse.isSuccess ?? false && newResponse.chats != null && newResponse.chats!.isNotEmpty) {
+            if (chats.isNotEmpty) {
+              // Only update the first page messages
+              chats[0].allMessages!.clear();
+              chats[0].allMessages!.addAll(newResponse.chats![0].allMessages!);
+            } else {
+              chats.addAll(newResponse.chats!);
+            }
+          }
+        } else {
+          // If user is on a different page, load only more chats instead of refreshing everything
+          page.value -= 1;
+          await fetchMoreChats(page);
+        }
+
+        chats.refresh();
+        update();
+
+        final MessageController controller = Get.put(MessageController());
+        controller.onInit();
+        controller.update();
       } else {
         Get.snackbar('Error', 'Failed to send message please try again',colorText: AppColors.white,backgroundColor: AppColors.calendarColor);
+      }
+    } catch (e) {
+      Get.snackbar('Error', 'Something went wrong');
+    }finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> updateEventStatus({String? eventId, String? status}) async {
+    isLoading.value = true;
+    try {
+      requestBody = {
+        "event_id": eventId ?? '',
+        "status": status,
+      };
+      var response = await _apiService.updateEventStatus(requestBody);
+      if (response.isSuccess ?? false) {
+        await fetchUserChats();
+      } else {
+        Get.snackbar('Error', 'Failed to update event please try again',colorText: AppColors.white,backgroundColor: AppColors.calendarColor);
       }
     } catch (e) {
       Get.snackbar('Error', 'Something went wrong');
@@ -150,21 +201,25 @@ class ChatIndividualController extends GetxController {
   Future<void> fetchUserChats() async {
     isLoading.value = true;
     try {
-      page.value = 1; // Reset page on initial load
       var response = await _apiService.fetchUserMessage(chatType.value, chatId.value, page.value, limit.value);
       if (response.isSuccess ?? false) {
         chats.assignAll(response.chats ?? []);
         hasMoreData.value = (response.chats?[0].messagesPagination?.totalPages ?? 1) > page.value;
+        chats.refresh(); // Ensure UI updates
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (scrollController.hasClients && chats.isNotEmpty && chats[0].allMessages != null && chats[0].allMessages!.isNotEmpty) {
-            scrollController.jumpTo(scrollController.position.maxScrollExtent);
+            scrollController.animateTo(scrollController.position.maxScrollExtent+1000,
+                duration: Duration(milliseconds: 20), curve: Curves.easeInOut);
           }
         });
+        if(hasMoreData.value){
+          await fetchMoreChats(page);
+        }
       } else {
 
       }
     } catch (e) {
-      Get.snackbar('Error', 'Something went wrong');
+      // Get.snackbar('Error', 'Something went wrong');
     } finally {
       isLoading.value = false;
     }
@@ -204,26 +259,39 @@ class ChatIndividualController extends GetxController {
     }
   }
 
-  Future<void> fetchMoreChats() async {
-    if (isMoreLoading.value || !hasMoreData.value) return;
+  Future<void> fetchMoreChats(RxInt page) async {
 
-    isMoreLoading.value = true;
+    isLoading.value = true; // Indicate loading state
     try {
       page++;
-      var response = await _apiService.fetchUserMessage(chatType.value,chatId.value,page.value, limit.value);
+      var response = await _apiService.fetchUserMessage(chatType.value, chatId.value, page.value, limit.value);
+
       if (response.isSuccess ?? false) {
-        if (response.chats!.isNotEmpty) {
-          chats.addAll(response.chats!);
+        if (chats.isNotEmpty) {
+          // Append new messages at the end
+          chats[0].allMessages!.addAll(response.chats![0].allMessages!);
+
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (scrollController.hasClients && chats.isNotEmpty && chats[0].allMessages != null && chats[0].allMessages!.isNotEmpty) {
+              scrollController.jumpTo(scrollController.position.maxScrollExtent+1000);
+            }
+          });
         } else {
-          hasMoreData.value = false;
+          chats.addAll(response.chats!);
         }
+
+        hasMoreData.value = (response.chats?[0].messagesPagination?.totalPages ?? 1) > page.value;
+        chats.refresh(); // Force UI refresh
+
+        update(); // Update UI after adding messages
+
       } else {
-        // Get.snackbar('Error', response.message ?? 'Failed to load more chats');
+        hasMoreData.value = false;
       }
     } catch (e) {
       Get.snackbar('Error', 'Something went wrong');
     } finally {
-      isMoreLoading.value = false;
+      isLoading.value = false;
     }
   }
 

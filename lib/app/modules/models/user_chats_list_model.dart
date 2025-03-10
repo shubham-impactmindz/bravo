@@ -4,18 +4,18 @@
 
 import 'dart:convert';
 
-UserChatsModel userChatsModelFromJson(String str) => UserChatsModel.fromJson(json.decode(str));
+UserChatsListModel userChatsModelFromJson(String str) => UserChatsListModel.fromJson(json.decode(str));
 
-String userChatsModelToJson(UserChatsModel data) => json.encode(data.toJson());
+String userChatsModelToJson(UserChatsListModel data) => json.encode(data.toJson());
 
-class UserChatsModel {
+class UserChatsListModel {
   bool? isSuccess;
   String? message;
   UserInfo? userInfo;
   List<Chat>? chats;
   Pagination? pagination;
 
-  UserChatsModel({
+  UserChatsListModel({
     this.isSuccess,
     this.message,
     this.userInfo,
@@ -23,7 +23,7 @@ class UserChatsModel {
     this.pagination,
   });
 
-  factory UserChatsModel.fromJson(Map<String, dynamic> json) => UserChatsModel(
+  factory UserChatsListModel.fromJson(Map<String, dynamic> json) => UserChatsListModel(
     isSuccess: json["isSuccess"],
     message: json["message"],
     userInfo: json["userInfo"] == null ? null : UserInfo.fromJson(json["userInfo"]),

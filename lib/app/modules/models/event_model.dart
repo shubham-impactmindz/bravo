@@ -5,17 +5,23 @@ class Event {
   final String? title;
   final String? description;
   final DateTime? date;
-  final DateTime? startTime;
-  final DateTime? endTime;
-  final String? location;
-  final Category? category;
-  final double? cost;
-  final String? createdBy;
-  final List<String>? eventDoc; // Changed to List<String>?
-  final String? eventNotes;
-  final List<Participant>? participants;
+  DateTime? startTime;
+  DateTime? endTime;
+  String? location;
+  Category? category;
+  String? cost;
+  dynamic eventDoc;
+  String? eventNotes;
+  String? createdBy;
+  String? isCancelled;
+  dynamic cancellationReason;
+  DateTime? createdAt;
+  DateTime? updatedAt;
+  String? deviceTime;
+  String? createdByName;
+  List<Participant>? participants;
   List<GroupList>? groups;
-  final List<User>? users;
+  List<User>? users;
 
   Event({
     this.eventId,
@@ -27,9 +33,15 @@ class Event {
     this.location,
     this.category,
     this.cost,
-    this.createdBy,
     this.eventDoc,
     this.eventNotes,
+    this.createdBy,
+    this.isCancelled,
+    this.cancellationReason,
+    this.createdAt,
+    this.updatedAt,
+    this.deviceTime,
+    this.createdByName,
     this.participants,
     this.groups,
     this.users,
@@ -41,17 +53,23 @@ class Event {
       title: json['title'] ?? '',
       description: json['description'] ?? '',
       date: DateTime.tryParse(json['start_time'] ?? '') ?? DateTime.now(),
-      startTime: DateTime.tryParse(json['start_time'] ?? '') ?? DateTime.now(),
-      endTime: DateTime.tryParse(json['end_time'] ?? '') ?? DateTime.now(),
-      location: json['location'] ?? '',
-      category: Category.fromJson(json["category"]),
-      cost: double.tryParse(json['cost'] ?? ''),
-      createdBy: json['created_by_name'],
-      eventDoc: (json['event_doc'] as List?)?.cast<String>(), // Casting to List<String>
-      eventNotes: json['event_notes'],
-      participants: (json['userData'] as List?)?.map((p) => Participant.fromJson(p)).toList(),
-      groups: (json['groups'] as List?)?.map((g) => GroupList.fromJson(g)).toList(),
-      users: (json['users'] as List?)?.map((u) => User.fromJson(u)).toList(),
+      startTime: json["start_time"] == null ? null : DateTime.parse(json["start_time"]),
+      endTime: json["end_time"] == null ? null : DateTime.parse(json["end_time"]),
+      location: json["location"],
+      category: json["category"] == null ? null : Category.fromJson(json["category"]),
+      cost: json["cost"],
+      eventDoc: json["event_doc"],
+      eventNotes: json["event_notes"],
+      createdBy: json["created_by"],
+      isCancelled: json["is_cancelled"],
+      cancellationReason: json["cancellation_reason"],
+      createdAt: json["created_at"] == null ? null : DateTime.parse(json["created_at"]),
+      updatedAt: json["updated_at"] == null ? null : DateTime.parse(json["updated_at"]),
+      deviceTime: json["device_time"],
+      createdByName: json["created_by_name"],
+      participants: json["participants"] == null ? [] : List<Participant>.from(json["participants"]!.map((x) => Participant.fromJson(x))),
+      groups: json["groups"] == null ? [] : List<GroupList>.from(json["groups"]!.map((x) => GroupList.fromJson(x))),
+      users: json["users"] == null ? [] : List<User>.from(json["users"]!.map((x) => User.fromJson(x))),
     );
   }
 }
