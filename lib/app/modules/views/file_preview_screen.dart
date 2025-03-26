@@ -1,5 +1,5 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
 
 class FilePreviewScreen extends StatefulWidget {
@@ -19,6 +19,15 @@ class _FilePreviewScreenState extends State<FilePreviewScreen> {
 
   @override
   Widget build(BuildContext context) {
+
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent, // ✅ Keeps the status bar transparent
+        statusBarIconBrightness: Brightness.light, // ✅ White icons on dark backgrounds
+        statusBarBrightness: Brightness.dark, // ✅ Ensures compatibility on iOS
+      ),
+    );
+
     return Scaffold(
       appBar: AppBar(title: Text(widget.filePath.split('/').last)),
       body: Stack(

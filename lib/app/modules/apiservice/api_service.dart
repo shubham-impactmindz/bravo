@@ -11,6 +11,7 @@ import 'package:bravo/app/modules/models/user_chats_list_model.dart';
 import 'package:bravo/app/modules/models/user_details_model.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import '../models/all_users_model.dart';
 import '../models/event_model.dart';
 import '../models/unique_code_model.dart';
 import '../models/user_chat_model.dart';
@@ -67,6 +68,35 @@ class ApiService {
     }
 
     return {};
+  }
+
+  Future<Event> fetchEventById(String eventId) async {
+    final url = Uri.parse("$baseUrl/Events/get_events_details?event_id=$eventId");
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token') ?? '';
+
+      try {
+        final response = await http.get(
+          url,
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer $token",
+          },
+        );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+
+        // Check isSuccess and data is not empty
+        if (data["isSuccess"] == true && data["data"] != null && data["data"] is Map<String, dynamic>) {
+          return Event.fromJson(jsonDecode(response.body));
+        }
+      }
+    } catch (e) {
+      print("Error fetching events: $e");
+    }
+
+    return Event();
   }
 
   Map<int, List<Event>> _parseEvents(Map<String, dynamic> rawData) {
@@ -477,6 +507,31 @@ class ApiService {
       }
     } catch (e) {
       return StudentDetailModel();
+    }
+  }
+
+  Future<AllUsersModel> fetchAllUser() async {
+    final url = Uri.parse('$baseUrl/AllActiveUsers');
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token') ?? '';
+
+    try {
+
+      final response = await http.get(
+        url,
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return AllUsersModel.fromJson(jsonDecode(response.body));
+      } else {
+        return AllUsersModel();
+      }
+    } catch (e) {
+      return AllUsersModel();
     }
   }
 

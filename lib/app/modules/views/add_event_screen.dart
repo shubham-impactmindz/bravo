@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:multi_select_flutter/chip_display/multi_select_chip_display.dart';
 import 'package:multi_select_flutter/dialog/multi_select_dialog_field.dart';
@@ -19,6 +20,13 @@ class AddEventScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
 
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent, // ✅ Keeps the status bar transparent
+        statusBarIconBrightness: Brightness.light, // ✅ White icons on dark backgrounds
+        statusBarBrightness: Brightness.dark, // ✅ Ensures compatibility on iOS
+      ),
+    );
     return Scaffold(
       backgroundColor: AppColors.calendarColor,
       body: Stack(

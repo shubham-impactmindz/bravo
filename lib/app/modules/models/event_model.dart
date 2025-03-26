@@ -10,7 +10,7 @@ class Event {
   String? location;
   Category? category;
   String? cost;
-  dynamic eventDoc;
+  List<String>? eventDoc; // Ensure it's a List<String>
   String? eventNotes;
   String? createdBy;
   String? isCancelled;
@@ -33,7 +33,7 @@ class Event {
     this.location,
     this.category,
     this.cost,
-    this.eventDoc,
+    this.eventDoc, // Ensure it's required
     this.eventNotes,
     this.createdBy,
     this.isCancelled,
@@ -58,7 +58,11 @@ class Event {
       location: json["location"],
       category: json["category"] == null ? null : Category.fromJson(json["category"]),
       cost: json["cost"],
-      eventDoc: json["event_doc"],
+      eventDoc: json["event_doc"] is List
+          ? List<String>.from(json["event_doc"])
+          : json["event_doc"] != null
+          ? [json["event_doc"].toString()]
+          : [],
       eventNotes: json["event_notes"],
       createdBy: json["created_by"],
       isCancelled: json["is_cancelled"],

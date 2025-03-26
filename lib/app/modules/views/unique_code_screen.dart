@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import '../../constants/app_colors/app_colors.dart';
 import '../controllers/unique_code_controller.dart';
@@ -13,6 +14,14 @@ class UniqueCodeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
+
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent, // ✅ Keeps the status bar transparent
+        statusBarIconBrightness: Brightness.light, // ✅ White icons on dark backgrounds
+        statusBarBrightness: Brightness.dark, // ✅ Ensures compatibility on iOS
+      ),
+    );
 
     return Scaffold(
       backgroundColor: AppColors.calendarColor,

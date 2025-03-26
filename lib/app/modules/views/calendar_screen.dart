@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import '../../../widgets/event_list_item.dart';
@@ -11,11 +12,20 @@ class CalendarScreen extends GetView<CalendarController> {
   final controller = Get.put(CalendarController());
   final controllerBottom = Get.put(BottomNavBarController());
 
+  CalendarScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
 
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent, // ✅ Keeps the status bar transparent
+        statusBarIconBrightness: Brightness.light, // ✅ White icons on dark backgrounds
+        statusBarBrightness: Brightness.dark, // ✅ Ensures compatibility on iOS
+      ),
+    );
     return Scaffold(
       body: Container(
         color: AppColors.calendarColor,

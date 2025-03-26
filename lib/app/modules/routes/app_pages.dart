@@ -1,9 +1,12 @@
 // app/routes/app_pages.dart
 
+import 'package:bravo/app/modules/views/all_user_list_screen.dart';
 import 'package:bravo/app/modules/views/chat_detail_individual_screen.dart';
 import 'package:bravo/app/modules/views/view_event_screen.dart';
+import 'package:bravo/app/modules/views/webview_screen.dart';
 import 'package:get/get.dart';
 
+import '../views/about_screen.dart';
 import '../views/chat_detail_screen.dart';
 import '../views/edit_event_screen.dart';
 import '../views/home_screen.dart';
@@ -29,5 +32,8 @@ class AppPages {
     GetPage(name: Routes.chatDetail, page: () => ChatDetailScreen()),
     GetPage(name: Routes.chatDetailIndividual, page: () => ChatDetailIndividualScreen()),
     GetPage(name: Routes.viewEvent, page: () => ViewEventScreen()),
+    GetPage(name: Routes.about, page: () => AboutScreen()),
+    GetPage(name: Routes.webView, page: () => WebViewScreen()),
+    GetPage(name: Routes.allUser, page: () => AllUserListScreen()),
   ];
 }

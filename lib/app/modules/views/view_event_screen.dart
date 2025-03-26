@@ -1,12 +1,14 @@
 import 'package:bravo/app/constants/app_colors/app_colors.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import '../models/event_model.dart';
 import 'dart:io';
 
+import 'file_preview_doc_screen.dart';
 import 'file_preview_screen.dart'; // Import dart:io for File
 
 class ViewEventScreen extends StatelessWidget {
@@ -17,6 +19,14 @@ class ViewEventScreen extends StatelessWidget {
     final Event event = Get.arguments as Event; // Access the passed event
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
+
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent, // ✅ Keeps the status bar transparent
+        statusBarIconBrightness: Brightness.light, // ✅ White icons on dark backgrounds
+        statusBarBrightness: Brightness.dark, // ✅ Ensures compatibility on iOS
+      ),
+    );
 
     return Scaffold(
       backgroundColor: AppColors.calendarColor,
@@ -85,8 +95,12 @@ class ViewEventScreen extends StatelessWidget {
                           event.groups?.map((group) => group.name).join(', ') ??
                               'N/A'), // Display group names or N/A
                       _buildReadOnlyField('Event Cost', "\$${event.cost}" ?? 'N/A'),
-                      _buildReadOnlyField('Document', event.eventDoc?[0] ?? 'N/A', filePaths: event.eventDoc),
-                      _buildReadOnlyField('Event Notes', event.eventNotes??"N/A"),
+                    _buildReadOnlyField('Document',
+                      event.eventDoc!.isNotEmpty ? event.eventDoc!.first : 'N/A',
+                      filePaths: event.eventDoc,
+                    ),
+
+                    _buildReadOnlyField('Event Notes', event.eventNotes??"N/A"),
                       _buildReadOnlyField('Announcements', event.description ?? 'N/A'),
                     ],
                   ),
@@ -106,30 +120,33 @@ class ViewEventScreen extends StatelessWidget {
         Text(
           label,
           style: const TextStyle(
-              fontWeight: FontWeight.w400, color: AppColors.textLightColor),
+            fontWeight: FontWeight.w400,
+            color: AppColors.textLightColor,
+          ),
         ),
         const SizedBox(height: 5),
-        if (filePaths != null && filePaths.isNotEmpty) // Show files if available
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: filePaths.map((filePath) => _buildNetworkFilePreview(filePath)).toList(),
-          )
+        if (filePaths != null && filePaths.isNotEmpty)
+          _buildFileList(filePaths)
         else
           Container(
-            padding: const EdgeInsets.only(top: 8,bottom: 8),
+            padding: const EdgeInsets.only(top: 8, bottom: 8),
             decoration: BoxDecoration(
-              // border: Border.all(color: Colors.grey),
-              // borderRadius: BorderRadius.circular(8),
               color: Colors.white,
             ),
             child: Text(
-              value??'N/A',
+              value ?? 'N/A',
               style: const TextStyle(color: AppColors.calendarColor),
             ),
           ),
-
         const SizedBox(height: 10),
       ],
+    );
+  }
+
+  Widget _buildFileList(List<String> filePaths) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: filePaths.map((filePath) => _buildNetworkFilePreview(filePath)).toList(),
     );
   }
 
@@ -157,10 +174,11 @@ class ViewEventScreen extends StatelessWidget {
               fileUrl.endsWith('.jpeg') ||
               fileUrl.endsWith('.gif')) {
             Get.dialog(Dialog(child: Image.file(File(filePath))));
-          } else if (fileUrl.endsWith('.pdf') ||
-              fileUrl.endsWith('.doc') ||
-              fileUrl.endsWith('.docx')) {
+          } else if (fileUrl.endsWith('.pdf')) {
             Get.to(() => FilePreviewScreen(filePath: filePath));
+          } else if (fileUrl.endsWith('.doc') ||
+              fileUrl.endsWith('.docx')) {
+            Get.to(() => FilePreviewDocScreen(filePath: fileUrl));
           } else {
             Get.snackbar("File Type", "Cannot preview this file type.");
           }

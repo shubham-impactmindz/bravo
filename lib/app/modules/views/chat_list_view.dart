@@ -4,8 +4,8 @@ import 'package:bravo/app/modules/controllers/message_controller.dart';
 import 'package:bravo/app/modules/controllers/profile_controller.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
 
 import '../controllers/bottom_nav_bar_controller.dart';
 import '../routes/app_pages.dart';
@@ -21,6 +21,14 @@ class ChatListView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
+
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent, // ✅ Keeps the status bar transparent
+        statusBarIconBrightness: Brightness.light, // ✅ White icons on dark backgrounds
+        statusBarBrightness: Brightness.dark, // ✅ Ensures compatibility on iOS
+      ),
+    );
 
     return Scaffold(
       backgroundColor: AppColors.calendarColor,
@@ -41,7 +49,7 @@ class ChatListView extends StatelessWidget {
                       ),
                       GestureDetector(
                         onTap: () {
-                          controllerBottom.selectedIndex.value = 2;
+                          Get.toNamed(Routes.allUser);
                         },
                         child: Image.asset('assets/images/add.png', height: 30),
                       ),

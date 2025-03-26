@@ -1,10 +1,13 @@
 import 'package:bravo/app/modules/controllers/profile_controller.dart';
 import 'package:bravo/app/modules/routes/app_pages.dart';
+import 'package:bravo/app/modules/views/webview_screen.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:bravo/app/constants/app_colors/app_colors.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ProfileScreen extends StatelessWidget {
   ProfileScreen({super.key});
@@ -13,6 +16,14 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
+
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent, // ✅ Keeps the status bar transparent
+        statusBarIconBrightness: Brightness.light, // ✅ White icons on dark backgrounds
+        statusBarBrightness: Brightness.dark, // ✅ Ensures compatibility on iOS
+      ),
+    );
 
     return Scaffold(
       backgroundColor: AppColors.calendarColor,
@@ -252,9 +263,15 @@ class ProfileScreen extends StatelessWidget {
           ? Text(subtitle, style: TextStyle(fontSize: 12, color: Colors.grey))
           : null,
       trailing: Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
-      onTap: () {
+      onTap: () async {
         if (title == "Sign out") {
           _showSignOutDialog();
+        }
+        if (title == "About Bravo") {
+          Get.toNamed(Routes.about);
+        }
+        if (title == "Privacy Policy") {
+          Get.toNamed(Routes.webView);
         }
       },
     );

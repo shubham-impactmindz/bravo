@@ -11,4 +11,7 @@ abstract class Routes {
   static const chatDetail = '/chatDetail';
   static const chatDetailIndividual = '/chatDetailIndividual';
   static const viewEvent = '/viewEvent';
+  static const about = '/about';
+  static const webView = '/webView';
+  static const allUser = '/allUser';
 }

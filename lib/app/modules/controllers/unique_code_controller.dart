@@ -29,7 +29,7 @@ class UniqueCodeController extends GetxController {
         user.value = response.userInfo;
 
         await _saveUserId(response.userInfo?.userId ?? '',response.token?? '');
-        Get.toNamed(Routes.home);
+        Get.offAllNamed(Routes.home);
         Get.snackbar('Success', response.message,colorText: AppColors.white,backgroundColor: AppColors.calendarColor);
       } else {
         Get.snackbar('Error', response.message,colorText: AppColors.white,backgroundColor: AppColors.calendarColor);

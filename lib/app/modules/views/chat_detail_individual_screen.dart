@@ -6,6 +6,7 @@ import 'package:bravo/app/modules/routes/app_pages.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
@@ -13,6 +14,7 @@ import 'package:path_provider/path_provider.dart';
 import '../../../../widgets/event_card.dart';
 import '../controllers/profile_controller.dart';
 import '../models/user_chat_model.dart';
+import 'file_preview_doc_screen.dart';
 import 'file_preview_screen.dart';
 
 class ChatDetailIndividualScreen extends StatelessWidget {
@@ -24,6 +26,14 @@ class ChatDetailIndividualScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
+
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent, // ✅ Keeps the status bar transparent
+        statusBarIconBrightness: Brightness.light, // ✅ White icons on dark backgrounds
+        statusBarBrightness: Brightness.dark, // ✅ Ensures compatibility on iOS
+      ),
+    );
 
     return Scaffold(
       backgroundColor: AppColors.calendarColor, // Match background color
@@ -336,11 +346,12 @@ class ChatDetailIndividualScreen extends StatelessWidget {
                                         fileUrl.endsWith('.gif')) {
                                       Get.dialog(Dialog(
                                           child: Image.file(File(filePath))));
-                                    } else if (fileUrl.endsWith('.pdf') ||
-                                        fileUrl.endsWith('.doc') ||
-                                        fileUrl.endsWith('.docx')) {
+                                    } else if (fileUrl.endsWith('.pdf')) {
                                       Get.to(() => FilePreviewScreen(
                                           filePath: filePath));
+                                    } else if (fileUrl.endsWith('.doc') ||
+                                        fileUrl.endsWith('.docx')) {
+                                      Get.to(() => FilePreviewDocScreen(filePath: fileUrl));
                                     } else {
                                       Get.snackbar("File Type",
                                           "Cannot preview this file type.");

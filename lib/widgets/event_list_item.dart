@@ -129,7 +129,7 @@ class EventListItem extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  event.createdBy ?? "",
+                  event.createdByName ?? "",
                   style: const TextStyle(
                     fontSize: 12,
                     fontFamily: 'Roboto',
@@ -151,7 +151,7 @@ class EventListItem extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        event.cost.toString(),
+                        "\$${event.cost.toString()}",
                         style: const TextStyle(
                           fontSize: 12,
                           fontFamily: 'Roboto',

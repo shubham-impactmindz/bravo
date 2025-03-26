@@ -3,9 +3,11 @@ import 'dart:io';
 import 'package:bravo/app/constants/app_colors/app_colors.dart';
 import 'package:bravo/app/modules/controllers/chat_controller.dart';
 import 'package:bravo/app/modules/routes/app_pages.dart';
+import 'package:bravo/app/modules/views/file_preview_doc_screen.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
@@ -25,8 +27,16 @@ class ChatDetailScreen extends StatelessWidget {
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
 
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
+      ),
+    );
+
     return Scaffold(
-      backgroundColor: AppColors.calendarColor, // Match background color
+      backgroundColor: AppColors.calendarColor,
       body: SafeArea(
         child: Stack(
           children: [
@@ -34,124 +44,99 @@ class ChatDetailScreen extends StatelessWidget {
               children: [
                 SizedBox(height: screenHeight * 0.02),
                 Obx(
-                  () => Row(
-                    children: [
-                      SizedBox(
-                        width: 20,
-                      ),
-                      GestureDetector(
-                        onTap: () {
-                          Get.back();
-                        },
-                        child: Image.asset(
-                          'assets/images/back.png',
-                          height: 30,
+                      () {
+                    if (controller.chats.isEmpty) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    return Row(
+                      children: [
+                        SizedBox(width: 20),
+                        GestureDetector(
+                          onTap: () {
+                            Get.back();
+                          },
+                          child: Image.asset('assets/images/back.png', height: 30),
                         ),
-                      ),
-                      SizedBox(
-                        width: 20,
-                      ),
-                      Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          CircleAvatar(
-                            radius:24,
-                            child: CachedNetworkImage(
-                              imageUrl: controller.chats[0].profilePic ?? '',
-                              imageBuilder: (context, imageProvider) => Container(
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle, // Ensures circular shape
-                                  image: DecorationImage(
-                                    image: imageProvider,
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
-                              ),
-                              placeholder: (context, url) => const CircularProgressIndicator(),
-                              errorWidget: (context, url, error) {
-                                String initials = (controller.chats.isNotEmpty ?? false) ? controller.chats[0].name![0].toUpperCase() : '?';
-
-                                return CircleAvatar(
-                                  radius: 24,
-                                  backgroundColor: AppColors.calendarColor, // Red background
-                                  child: Text(
-                                    initials,
-                                    style: const TextStyle(
-                                      color: AppColors.white, // White text for contrast
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
+                        SizedBox(width: 20),
+                        Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            CircleAvatar(
+                              radius: 24,
+                              child: CachedNetworkImage(
+                                imageUrl: controller.chats[0].profilePic ?? '',
+                                imageBuilder: (context, imageProvider) => Container(
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    image: DecorationImage(
+                                      image: imageProvider,
+                                      fit: BoxFit.cover,
                                     ),
                                   ),
-                                );
-                              },
-                            ),
-                          ),
-                          controller.chats[0].chatType == "group"
-                              ? Positioned(
-                                  bottom: 0,
-                                  right: 0,
-                                  child: CircleAvatar(
-                                    radius: 10,
-                                    backgroundColor: Colors.black54,
+                                ),
+                                placeholder: (context, url) => const CircularProgressIndicator(),
+                                errorWidget: (context, url, error) {
+                                  String initials = controller.chats[0].name![0].toUpperCase();
+                                  return CircleAvatar(
+                                    radius: 24,
+                                    backgroundColor: AppColors.calendarColor,
                                     child: Text(
-                                        (controller.chats[0].groupMembers?.length
-                                                .toString()) ??
-                                            "0",
-                                        style: TextStyle(
-                                            fontSize: 10, color: Colors.white)),
-                                  ),
-                                )
-                              : Container(),
-                        ],
-                      ),
-                      SizedBox(
-                        width: 20,
-                      ),
-                      GestureDetector(
-                        onTap: () {
-                          if(controller.chatType.value=="private"){
-                            controller.userId.value = controller.chats[0].userId??'';
-                            controller.fetchUserDetailById();
-                            controller.update();
-                            Get.toNamed(Routes.studentDetail);
-                          } else {
-                            Get.toNamed(Routes.studentList);
-                          }
-                        },
-                        child: Obx(()=>
-                            Column(
+                                      initials,
+                                      style: const TextStyle(color: AppColors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                            controller.chats[0].chatType == "group"
+                                ? Positioned(
+                              bottom: 0,
+                              right: 0,
+                              child: CircleAvatar(
+                                radius: 10,
+                                backgroundColor: Colors.black54,
+                                child: Text((controller.chats[0].groupMembers?.length.toString()) ?? "0", style: TextStyle(fontSize: 10, color: Colors.white)),
+                              ),
+                            )
+                                : Container(),
+                          ],
+                        ),
+                        SizedBox(width: 20),
+                        GestureDetector(
+                          onTap: () {
+                            if (controller.chatType.value == "private") {
+                              controller.userId.value = controller.chats[0].userId ?? '';
+                              controller.fetchUserDetailById();
+                              controller.update();
+                              Get.toNamed(Routes.studentDetail);
+                            } else {
+                              Get.toNamed(Routes.studentList);
+                            }
+                          },
+                          child: Obx(() => Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
                                 controller.chats[0].name ?? "",
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
+                                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
                               ),
                               controller.chats[0].chatType == "group"
                                   ? SizedBox(
-                                width: screenWidth*0.50,
-                                      child: Text(
-                                        controller.chats[0].groupMembers
-                                                ?.map((member) => member.name)
-                                                .join(", ") ??
-                                            "",
-                                        style: TextStyle(
-                                            fontSize: 12, color: Colors.white),
-                                        maxLines: 1,
-                                        overflow: TextOverflow
-                                            .ellipsis, // Ensures single-line truncation
-                                      ),
-                                    )
+                                width: screenWidth * 0.50,
+                                child: Text(
+                                  controller.chats[0].groupMembers?.map((member) => member.name).join(", ") ?? "",
+                                  style: TextStyle(fontSize: 12, color: Colors.white),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              )
                                   : Container(),
                             ],
-                          ),
+                          )),
                         ),
-                      ),
-                    ],
-                  ),
+                      ],
+                    );
+                  },
                 ),
                 SizedBox(height: screenHeight * 0.02),
                 Expanded(
@@ -166,15 +151,14 @@ class ChatDetailScreen extends StatelessWidget {
                     child: RefreshIndicator(
                       onRefresh: controller.fetchUserChats,
                       child: Obx(
-                        () {
-
-                          if ((controller.chats[0].allMessages??[]).isEmpty) {
+                            () {
+                          if (controller.chats.isEmpty || (controller.chats[0].allMessages??[]).isEmpty) {
                             return const Center(child: Text("No chats available"));
                           }
 
                           return ListView.builder(
                             controller: controller.scrollController,
-                            reverse: false, // Display items bottom-to-top
+                            reverse: false,
                             physics: const AlwaysScrollableScrollPhysics(),
                             itemCount: controller.chats[0].allMessages?.length ?? 0,
                             padding: EdgeInsets.all(5),
@@ -336,11 +320,12 @@ class ChatDetailScreen extends StatelessWidget {
                                         fileUrl.endsWith('.gif')) {
                                       Get.dialog(Dialog(
                                           child: Image.file(File(filePath))));
-                                    } else if (fileUrl.endsWith('.pdf') ||
-                                        fileUrl.endsWith('.doc') ||
-                                        fileUrl.endsWith('.docx')) {
+                                    } else if (fileUrl.endsWith('.pdf')) {
                                       Get.to(() => FilePreviewScreen(
                                           filePath: filePath));
+                                    } else if (fileUrl.endsWith('.doc') ||
+                                        fileUrl.endsWith('.docx')) {
+                                      Get.to(() => FilePreviewDocScreen(filePath: fileUrl));
                                     } else {
                                       Get.snackbar("File Type",
                                           "Cannot preview this file type.");

@@ -2,6 +2,7 @@ import 'package:bravo/app/constants/app_colors/app_colors.dart';
 import 'package:bravo/app/modules/views/add_event_screen.dart';
 import 'package:bravo/app/modules/views/profile_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import '../controllers/bottom_nav_bar_controller.dart';
 import 'calendar_screen.dart';
@@ -23,6 +24,13 @@ class BottomNavBar extends StatelessWidget {
       ProfileScreen(),
     ];
 
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent, // ✅ Keeps the status bar transparent
+        statusBarIconBrightness: Brightness.light, // ✅ White icons on dark backgrounds
+        statusBarBrightness: Brightness.dark, // ✅ Ensures compatibility on iOS
+      ),
+    );
     return Scaffold(
       backgroundColor: AppColors.calendarColor,
       body: Obx(() => screens[controller.selectedIndex.value]),

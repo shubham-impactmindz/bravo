@@ -52,6 +52,8 @@ dependencies:
   app_settings:
   flutter_local_notifications:
   cached_network_image:
+  url_launcher:
+  flutter_inappwebview:
 
 dev_dependencies:
   flutter_test:
