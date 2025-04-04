@@ -1,9 +1,12 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../constants/app_colors/app_colors.dart';
 import '../apiservice/api_service.dart';
 import '../models/user_chats_list_model.dart';
+import '../routes/app_pages.dart';
 
 class MessageController extends GetxController {
   var messages = <Map<String, dynamic>>[].obs;
@@ -46,7 +49,15 @@ class MessageController extends GetxController {
         filteredChats.assignAll(chats); // ✅ Initialize filtered list with all chats
         hasMoreData.value = (response.pagination?.totalPages ?? 1) > page.value;
       } else {
-        Get.snackbar('Error', response.message ?? 'Failed to load chats');
+        if(response.isActive??false){
+
+        }else{
+          Get.snackbar('User Is Not Active', 'User Logged Out',colorText: Colors.white,
+              backgroundColor: AppColors.calendarColor);
+          SharedPreferences preferences = await SharedPreferences.getInstance();
+          await preferences.clear();
+          Get.offAllNamed(Routes.uniqueCode);
+        }
       }
     } catch (e) {
 

@@ -10,20 +10,28 @@ String userChatModelToJson(UserChatModel data) => json.encode(data.toJson());
 
 class UserChatModel {
   bool? isSuccess;
+  String? message;
+  bool? isActive;
   List<Chat>? chats;
 
   UserChatModel({
     this.isSuccess,
+    this.message,
+    this.isActive,
     this.chats,
   });
 
   factory UserChatModel.fromJson(Map<String, dynamic> json) => UserChatModel(
     isSuccess: json["isSuccess"],
+    message: json["message"],
+    isActive: json["is_active"],
     chats: json["chats"] == null ? [] : List<Chat>.from(json["chats"]!.map((x) => Chat.fromJson(x))),
   );
 
   Map<String, dynamic> toJson() => {
     "isSuccess": isSuccess,
+    "message": message,
+    "is_active": isActive,
     "chats": chats == null ? [] : List<dynamic>.from(chats!.map((x) => x.toJson())),
   };
 }

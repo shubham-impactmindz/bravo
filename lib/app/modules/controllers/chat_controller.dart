@@ -7,10 +7,12 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../constants/app_colors/app_colors.dart';
 import '../apiservice/api_service.dart';
 import '../models/user_chat_model.dart';
+import '../routes/app_pages.dart';
 
 class ChatController extends GetxController {
   var isLoading = false.obs;
@@ -144,7 +146,7 @@ class ChatController extends GetxController {
           // Fetch only the latest messages without resetting the list
           var newResponse = await _apiService.fetchUserMessage(chatType.value, chatId.value, 1, limit.value);
 
-          if (newResponse.isSuccess ?? false && newResponse.chats != null && newResponse.chats!.isNotEmpty) {
+          if (newResponse.isSuccess ?? false) {
             if (chats.isNotEmpty) {
               // Only update the first page messages
               chats[0].allMessages!.clear();
@@ -166,7 +168,16 @@ class ChatController extends GetxController {
         controller.onInit();
         controller.update();
       } else {
-        Get.snackbar('Error', 'Failed to send message please try again',colorText: AppColors.white,backgroundColor: AppColors.calendarColor);
+        if(response.isActive??false){
+          Get.snackbar('Error', 'Failed to send message please try again',colorText: AppColors.white,backgroundColor: AppColors.calendarColor);
+        }else{
+          Get.snackbar('User Is Not Active', 'User Logged Out',colorText: Colors.white,
+              backgroundColor: AppColors.calendarColor);
+          SharedPreferences preferences = await SharedPreferences.getInstance();
+          await preferences.clear();
+          Get.offAllNamed(Routes.uniqueCode);
+        }
+
       }
     } catch (e) {
       Get.snackbar('Error', 'Something went wrong');
@@ -213,7 +224,15 @@ class ChatController extends GetxController {
           await fetchMoreChats(page);
         }
       } else {
+        if(response.isActive??false){
 
+        }else{
+          Get.snackbar('User Is Not Active', 'User Logged Out',colorText: Colors.white,
+              backgroundColor: AppColors.calendarColor);
+          SharedPreferences preferences = await SharedPreferences.getInstance();
+          await preferences.clear();
+          Get.offAllNamed(Routes.uniqueCode);
+        }
       }
     } catch (e) {
       // Get.snackbar('Error', 'Something went wrong');

@@ -11,6 +11,7 @@ String userChatsModelToJson(UserChatsListModel data) => json.encode(data.toJson(
 class UserChatsListModel {
   bool? isSuccess;
   String? message;
+  bool? isActive;
   UserInfo? userInfo;
   List<Chat>? chats;
   Pagination? pagination;
@@ -18,6 +19,7 @@ class UserChatsListModel {
   UserChatsListModel({
     this.isSuccess,
     this.message,
+    this.isActive,
     this.userInfo,
     this.chats,
     this.pagination,
@@ -26,6 +28,7 @@ class UserChatsListModel {
   factory UserChatsListModel.fromJson(Map<String, dynamic> json) => UserChatsListModel(
     isSuccess: json["isSuccess"],
     message: json["message"],
+    isActive: json["is_active"],
     userInfo: json["userInfo"] == null ? null : UserInfo.fromJson(json["userInfo"]),
     chats: json["chats"] == null ? [] : List<Chat>.from(json["chats"]!.map((x) => Chat.fromJson(x))),
     pagination: json["pagination"] == null ? null : Pagination.fromJson(json["pagination"]),
@@ -34,6 +37,7 @@ class UserChatsListModel {
   Map<String, dynamic> toJson() => {
     "isSuccess": isSuccess,
     "message": message,
+    "is_active": isActive,
     "userInfo": userInfo?.toJson(),
     "chats": chats == null ? [] : List<dynamic>.from(chats!.map((x) => x.toJson())),
     "pagination": pagination?.toJson(),
