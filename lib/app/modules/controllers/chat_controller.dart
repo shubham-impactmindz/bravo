@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:bravo/app/modules/controllers/message_controller.dart';
 import 'package:bravo/app/modules/models/student_detail_model.dart';
+import 'package:bravo/app/modules/views/unique_code_screen.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -12,7 +13,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../constants/app_colors/app_colors.dart';
 import '../apiservice/api_service.dart';
 import '../models/user_chat_model.dart';
-import '../routes/app_pages.dart';
 
 class ChatController extends GetxController {
   var isLoading = false.obs;
@@ -168,14 +168,14 @@ class ChatController extends GetxController {
         controller.onInit();
         controller.update();
       } else {
-        if(response.isActive??false){
+        if(response.isActive??true){
           Get.snackbar('Error', 'Failed to send message please try again',colorText: AppColors.white,backgroundColor: AppColors.calendarColor);
         }else{
           Get.snackbar('User Is Not Active', 'User Logged Out',colorText: Colors.white,
               backgroundColor: AppColors.calendarColor);
           SharedPreferences preferences = await SharedPreferences.getInstance();
           await preferences.clear();
-          Get.offAllNamed(Routes.uniqueCode);
+          Get.to(UniqueCodeScreen());
         }
 
       }
@@ -231,7 +231,7 @@ class ChatController extends GetxController {
               backgroundColor: AppColors.calendarColor);
           SharedPreferences preferences = await SharedPreferences.getInstance();
           await preferences.clear();
-          Get.offAllNamed(Routes.uniqueCode);
+          Get.to(UniqueCodeScreen());
         }
       }
     } catch (e) {
@@ -285,10 +285,10 @@ class ChatController extends GetxController {
       if (response.isSuccess ?? false) {
         if (chats.isNotEmpty) {
           // Append new messages at the end
-          chats[0].allMessages!.addAll(response.chats![0].allMessages!);
+          chats[0].allMessages!.addAll(response.chats![0].allMessages??[]);
 
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (scrollController.hasClients && chats.isNotEmpty && chats[0].allMessages != null && chats[0].allMessages!.isNotEmpty) {
+            if (scrollController.hasClients && chats.isNotEmpty && chats[0].allMessages != null && (chats[0].allMessages??[]).isNotEmpty) {
               scrollController.jumpTo(scrollController.position.maxScrollExtent+1000);
             }
           });

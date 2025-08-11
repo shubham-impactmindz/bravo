@@ -1,3 +1,5 @@
+import 'package:bravo/app/modules/views/edit_event_screen.dart';
+import 'package:bravo/app/modules/views/view_event_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -6,7 +8,6 @@ import '../app/constants/app_colors/app_colors.dart';
 import '../app/modules/controllers/calendar_controller.dart';
 import '../app/modules/controllers/edit_event_controller.dart';
 import '../app/modules/models/event_model.dart';
-import '../app/modules/routes/app_pages.dart';
 import '../widgets/custom_alert_dialog.dart';
 
 class EventListItem extends StatelessWidget {
@@ -27,7 +28,7 @@ class EventListItem extends StatelessWidget {
       ),
       child: ListTile(
         onTap: () {
-          Get.toNamed(Routes.viewEvent, arguments: event);
+          Get.to(ViewEventScreen(), arguments: event);
         },
         title: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -54,7 +55,7 @@ class EventListItem extends StatelessWidget {
                       editController.eventSelectedDate.value=event;
                       editController.initializeEventData();
                       editController.update();
-                      Get.toNamed(Routes.editEvent);
+                      Get.to(EditEventScreen());
                     } else if (value == 'Delete') {
                       showDialog(
                         context: context,

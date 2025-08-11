@@ -2,7 +2,8 @@ import 'dart:io';
 
 import 'package:bravo/app/constants/app_colors/app_colors.dart';
 import 'package:bravo/app/modules/controllers/chat_individual_controller.dart';
-import 'package:bravo/app/modules/routes/app_pages.dart';
+import 'package:bravo/app/modules/views/student_detail_screen.dart';
+import 'package:bravo/app/modules/views/student_list_screen.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -123,9 +124,9 @@ class ChatDetailIndividualScreen extends StatelessWidget {
                             controller.userId.value = controller.chats[0].userId??'';
                             controller.fetchUserDetailById();
                             controller.update();
-                            Get.toNamed(Routes.studentDetail);
+                            Get.to(StudentDetailScreen());
                           } else {
-                            Get.toNamed(Routes.studentList);
+                            Get.to(StudentListScreen());
                           }
                         },
                         child: Obx(()=>

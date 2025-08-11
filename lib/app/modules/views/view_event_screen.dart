@@ -96,7 +96,7 @@ class ViewEventScreen extends StatelessWidget {
                               'N/A'), // Display group names or N/A
                       _buildReadOnlyField('Event Cost', "\$${event.cost}" ?? 'N/A'),
                     _buildReadOnlyField('Document',
-                      event.eventDoc!.isNotEmpty ? event.eventDoc!.first : 'N/A',
+                      (event.eventDoc??[]).isNotEmpty ? event.eventDoc?.first : 'N/A',
                       filePaths: event.eventDoc,
                     ),
 

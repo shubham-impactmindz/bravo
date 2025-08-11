@@ -1,5 +1,6 @@
 import 'package:bravo/app/modules/controllers/profile_controller.dart';
-import 'package:bravo/app/modules/routes/app_pages.dart';
+import 'package:bravo/app/modules/views/about_screen.dart';
+import 'package:bravo/app/modules/views/unique_code_screen.dart';
 import 'package:bravo/app/modules/views/webview_screen.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -268,10 +269,10 @@ class ProfileScreen extends StatelessWidget {
           _showSignOutDialog();
         }
         if (title == "About Bravo") {
-          Get.toNamed(Routes.about);
+          Get.to(AboutScreen());
         }
         if (title == "Privacy Policy") {
-          Get.toNamed(Routes.webView);
+          Get.to(WebViewScreen());
         }
       },
     );
@@ -287,7 +288,7 @@ class ProfileScreen extends StatelessWidget {
       onConfirm: () async {
         SharedPreferences preferences = await SharedPreferences.getInstance();
         await preferences.clear();
-        Get.offAllNamed(Routes.uniqueCode);
+        Get.offAll(UniqueCodeScreen());
       },
     );
   }

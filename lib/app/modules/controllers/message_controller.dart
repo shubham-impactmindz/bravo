@@ -1,3 +1,4 @@
+import 'package:bravo/app/modules/views/unique_code_screen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -6,7 +7,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../constants/app_colors/app_colors.dart';
 import '../apiservice/api_service.dart';
 import '../models/user_chats_list_model.dart';
-import '../routes/app_pages.dart';
 
 class MessageController extends GetxController {
   var messages = <Map<String, dynamic>>[].obs;
@@ -16,6 +16,7 @@ class MessageController extends GetxController {
   var limit = 20.obs;
   var chats = <Chat>[].obs;
   var filteredChats = <Chat>[].obs; // ✅ New list for search results
+  var user = Rxn<UserChatsListModel>();
   ScrollController scrollController = ScrollController();
   TextEditingController searchController = TextEditingController(); // ✅ Controller for search
   RxBool hasMoreData = false.obs;
@@ -45,6 +46,7 @@ class MessageController extends GetxController {
     try {
       var response = await _apiService.fetchMessages(page.value, limit.value);
       if (response.isSuccess ?? false) {
+        user.value = response;
         chats.assignAll(response.chats ?? []);
         filteredChats.assignAll(chats); // ✅ Initialize filtered list with all chats
         hasMoreData.value = (response.pagination?.totalPages ?? 1) > page.value;
@@ -56,7 +58,7 @@ class MessageController extends GetxController {
               backgroundColor: AppColors.calendarColor);
           SharedPreferences preferences = await SharedPreferences.getInstance();
           await preferences.clear();
-          Get.offAllNamed(Routes.uniqueCode);
+          Get.to(UniqueCodeScreen());
         }
       }
     } catch (e) {
@@ -74,7 +76,8 @@ class MessageController extends GetxController {
       page++;
       var response = await _apiService.fetchMessages(page.value, limit.value);
       if (response.isSuccess ?? false) {
-        if (response.chats!.isNotEmpty) {
+        user.value = response;
+        if ((response.chats??[]).isNotEmpty) {
           chats.addAll(response.chats!);
           filteredChats.assignAll(chats); // ✅ Update filtered list
         } else {

@@ -1,10 +1,13 @@
 import 'package:bravo/app/constants/app_colors/app_colors.dart';
 import 'package:bravo/app/modules/controllers/notification_controller.dart';
+import 'package:bravo/app/modules/views/chat_detail_screen.dart';
+import 'package:bravo/app/modules/views/view_event_screen.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import '../controllers/chat_controller.dart';
 import '../models/notification_model.dart';
 
 class NotificationsScreen extends StatelessWidget {
@@ -95,85 +98,111 @@ class NotificationsScreen extends StatelessWidget {
                                 itemBuilder: (context, index) {
                                   final notification =
                                       controller.notifications[index];
-                                  return Container(
-                                    padding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-                                    decoration: BoxDecoration(
-                                      border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
-                                    ),
-                                    child: Column(
-                                      mainAxisAlignment: MainAxisAlignment.end,
-                                      crossAxisAlignment: CrossAxisAlignment.end,
-                                      children: [
-                                        Row(
-                                          crossAxisAlignment: CrossAxisAlignment.center,
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          children: [
-                                            CircleAvatar(
-                                              radius: 35,
-                                              backgroundImage: notification.sender?.profilePicture != null
-                                                  ? NetworkImage(notification.sender!.profilePicture!)
-                                                  : null,
-                                              child: notification.sender?.profilePicture == null
-                                                  ? Text(
-                                                (notification.sender?.name?.isNotEmpty ?? false)
-                                                    ? notification.sender!.name![0].toUpperCase()
-                                                    : '?',
-                                                style: TextStyle(
-                                                  color: AppColors.white,
-                                                  fontSize: 20,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              )
-                                                  : null,
-                                            ),
-                                            SizedBox(width: 10),
-                                            Expanded(
-                                              child: notification.content!.contains('message')
-                                                  ? RichText(
-                                                text: TextSpan(
-                                                  text: "${notification.content} from",
+                                  return GestureDetector(
+                                    onTap: (){
+                                      if(notification.isValid ?? false) {
+                                        if (notification.type == "group") {
+                                          final ChatController chatController = Get.put(ChatController());
+                                          chatController.chatId.value = int.tryParse(notification.group?.id.toString() ?? "0") ?? 0;
+                                          chatController.chatType.value = notification.type ?? "";
+                                          chatController.onInit();
+                                          chatController.update();
+                                          Get.to(ChatDetailScreen());
+                                        } else if(notification.type == "private"){
+                                          final ChatController chatController = Get.put(ChatController());
+                                          chatController.chatId.value = int.tryParse(notification.sender?.id.toString() ?? "0") ?? 0;
+                                          chatController.chatType.value = notification.type ?? "";
+                                          chatController.onInit();
+                                          chatController.update();
+                                          Get.to(ChatDetailScreen());
+                                        } else if(notification.type == "event"){
+                                          Get.to(ViewEventScreen(), arguments: notification.event);
+                                        }
+                                      }
+                                      else{
+                                        Get.snackbar('Error', 'Event Expired',colorText: AppColors.white,backgroundColor: AppColors.calendarColor);
+                                      }
+                                    },
+                                    child: Container(
+                                      padding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+                                      decoration: BoxDecoration(
+                                        border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
+                                      ),
+                                      child: Column(
+                                        mainAxisAlignment: MainAxisAlignment.end,
+                                        crossAxisAlignment: CrossAxisAlignment.end,
+                                        children: [
+                                          Row(
+                                            crossAxisAlignment: CrossAxisAlignment.center,
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              CircleAvatar(
+                                                radius: 35,
+                                                backgroundImage: notification.sender?.profilePicture != null
+                                                    ? NetworkImage(notification.sender!.profilePicture!)
+                                                    : null,
+                                                child: notification.sender?.profilePicture == null
+                                                    ? Text(
+                                                  (notification.sender?.name?.isNotEmpty ?? false)
+                                                      ? notification.sender!.name![0].toUpperCase()
+                                                      : '?',
                                                   style: TextStyle(
-                                                    fontWeight: FontWeight.normal,
-                                                    color: Colors.grey[700],
+                                                    color: AppColors.white,
+                                                    fontSize: 20,
+                                                    fontWeight: FontWeight.bold,
                                                   ),
-                                                  children: [
-                                                    TextSpan(
-                                                      text: " ${notification.sender?.name} ",
-                                                      style: TextStyle(
-                                                        fontWeight: FontWeight.bold,
-                                                        color: Colors.black,
-                                                      ),
+                                                )
+                                                    : null,
+                                              ),
+                                              SizedBox(width: 10),
+                                              Expanded(
+                                                child: notification.content!.contains('message')
+                                                    ? RichText(
+                                                  text: TextSpan(
+                                                    text: "${notification.content} from",
+                                                    style: TextStyle(
+                                                      fontWeight: FontWeight.normal,
+                                                      color: Colors.grey[700],
                                                     ),
-                                                  ],
-                                                ),
-                                              )
-                                                  : RichText(
-                                                text: TextSpan(
-                                                  text: "${notification.content} created by ",
-                                                  style: TextStyle(
-                                                    fontWeight: FontWeight.normal,
-                                                    color: Colors.grey[700],
+                                                    children: [
+                                                      TextSpan(
+                                                        text: " ${notification.sender?.name} ",
+                                                        style: TextStyle(
+                                                          fontWeight: FontWeight.bold,
+                                                          color: Colors.black,
+                                                        ),
+                                                      ),
+                                                    ],
                                                   ),
-                                                  children: [
-                                                    TextSpan(
-                                                      text: "${notification.sender?.name} ",
-                                                      style: TextStyle(
-                                                        fontWeight: FontWeight.bold,
-                                                        color: Colors.black,
-                                                      ),
+                                                )
+                                                    : RichText(
+                                                  text: TextSpan(
+                                                    text: "${notification.content} created by ",
+                                                    style: TextStyle(
+                                                      fontWeight: FontWeight.normal,
+                                                      color: Colors.grey[700],
                                                     ),
-                                                  ],
+                                                    children: [
+                                                      TextSpan(
+                                                        text: "${notification.sender?.name} ",
+                                                        style: TextStyle(
+                                                          fontWeight: FontWeight.bold,
+                                                          color: Colors.black,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
                                                 ),
                                               ),
-                                            ),
-                                          ],
-                                        ),
+                                            ],
+                                          ),
 
-                                        Text(
-                                          _formatTime(notification.deviceTime??DateTime.now().toIso8601String()),
-                                          style: TextStyle(color: Colors.grey, fontSize: 12),
-                                        ),
-                                      ],
+                                          Text(
+                                            _formatTime(notification.deviceTime??DateTime.now().toIso8601String()),
+                                            style: TextStyle(color: Colors.grey, fontSize: 12),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   );
 

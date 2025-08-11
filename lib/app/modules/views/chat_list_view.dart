@@ -1,20 +1,20 @@
 import 'package:bravo/app/constants/app_colors/app_colors.dart';
 import 'package:bravo/app/modules/controllers/chat_controller.dart';
 import 'package:bravo/app/modules/controllers/message_controller.dart';
-import 'package:bravo/app/modules/controllers/profile_controller.dart';
+import 'package:bravo/app/modules/views/all_user_list_screen.dart';
+import 'package:bravo/app/modules/views/chat_detail_screen.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
 import '../controllers/bottom_nav_bar_controller.dart';
-import '../routes/app_pages.dart';
 
 class ChatListView extends StatelessWidget {
   ChatListView({super.key});
   final MessageController controller = Get.put(MessageController());
-  final ChatController chatController = Get.put(ChatController());
-  final ProfileController profileController = Get.put(ProfileController());
+  // final ChatController chatController = Get.put(ChatController());
+  // final ProfileController profileController = Get.put(ProfileController());
 
   final controllerBottom = Get.put(BottomNavBarController());
 
@@ -44,12 +44,12 @@ class ChatListView extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Welcome back, ${profileController.user.value?.userInfo?.username ?? ""}',
+                        'Welcome back, ${controller.user.value?.userInfo?.username ?? ""}',
                         style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500, color: Colors.white),
                       ),
                       GestureDetector(
                         onTap: () {
-                          Get.toNamed(Routes.allUser);
+                          Get.to(AllUserListScreen());
                         },
                         child: Image.asset('assets/images/add.png', height: 30),
                       ),
@@ -117,11 +117,12 @@ class ChatListView extends StatelessWidget {
                             final chat = controller.filteredChats[index];
                             return GestureDetector(
                               onTap: () async {
+                                final ChatController chatController = Get.put(ChatController());
                                 chatController.chatId.value = chat.chatId ?? 0;
                                 chatController.chatType.value = chat.type ?? "";
                                 chatController.onInit();
                                 chatController.update();
-                                Get.toNamed(Routes.chatDetail);
+                                Get.to(ChatDetailScreen());
                               },
                               child: ListTile(
                                 leading: CircleAvatar(

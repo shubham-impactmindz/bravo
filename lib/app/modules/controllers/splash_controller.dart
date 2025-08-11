@@ -1,7 +1,8 @@
 // app/modules/splash/controllers/splash_controller.dart
+import 'package:bravo/app/modules/views/unique_code_screen.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../routes/app_pages.dart';
+import '../views/home_screen.dart';
 
 class SplashController extends GetxController {
   @override
@@ -19,11 +20,11 @@ class SplashController extends GetxController {
 
   void _navigateToHome() async {
     await Future.delayed(Duration(seconds: 3));
-    Get.offAllNamed(Routes.home);
+    Get.offAll(HomeScreen());
   }
 
   void _navigateToUnique() async {
     await Future.delayed(Duration(seconds: 3));
-    Get.offAllNamed(Routes.uniqueCode);
+    Get.offAll(UniqueCodeScreen());
   }
 }

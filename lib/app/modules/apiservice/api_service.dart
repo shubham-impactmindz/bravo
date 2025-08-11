@@ -71,33 +71,37 @@ class ApiService {
   }
 
   Future<Event> fetchEventById(String eventId) async {
-    final url = Uri.parse("$baseUrl/Events/get_events_details?event_id=$eventId");
+    final url = Uri.parse("$baseUrl/Events/get_event_details?event_id=$eventId");
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token') ?? '';
 
-      try {
-        final response = await http.get(
-          url,
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer $token",
-          },
-        );
+    try {
+      final response = await http.get(
+        url,
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+      );
 
       if (response.statusCode == 200) {
-        final data = json.decode(response.body);
+        final Map<String, dynamic> decoded = jsonDecode(response.body);
 
-        // Check isSuccess and data is not empty
-        if (data["isSuccess"] == true && data["data"] != null && data["data"] is Map<String, dynamic>) {
-          return Event.fromJson(jsonDecode(response.body));
+        if (decoded['data'] != null) {
+          return Event.fromJson(decoded['data']);
+        } else {
+          print("No data found in response");
         }
+      } else {
+        print("Failed to fetch event: ${response.statusCode}");
       }
     } catch (e) {
       print("Error fetching events: $e");
     }
 
-    return Event();
+    return Event(); // return empty object if failed
   }
+
 
   Map<int, List<Event>> _parseEvents(Map<String, dynamic> rawData) {
     Map<int, List<Event>> eventsMap = {};

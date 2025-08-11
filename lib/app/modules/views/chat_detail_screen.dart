@@ -2,8 +2,9 @@ import 'dart:io';
 
 import 'package:bravo/app/constants/app_colors/app_colors.dart';
 import 'package:bravo/app/modules/controllers/chat_controller.dart';
-import 'package:bravo/app/modules/routes/app_pages.dart';
 import 'package:bravo/app/modules/views/file_preview_doc_screen.dart';
+import 'package:bravo/app/modules/views/student_detail_screen.dart';
+import 'package:bravo/app/modules/views/student_list_screen.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -95,7 +96,14 @@ class ChatDetailScreen extends StatelessWidget {
                               child: CircleAvatar(
                                 radius: 10,
                                 backgroundColor: Colors.black54,
-                                child: Text((controller.chats[0].groupMembers?.length.toString()) ?? "0", style: TextStyle(fontSize: 10, color: Colors.white)),
+                                child: Text(
+                                  (controller.chats[0].groupMembers
+                                      ?.where((member) => member.roleId != "5")
+                                      .length
+                                      .toString()) ??
+                                      "0",
+                                  style: const TextStyle(fontSize: 10, color: Colors.white),
+                                ),
                               ),
                             )
                                 : Container(),
@@ -108,9 +116,9 @@ class ChatDetailScreen extends StatelessWidget {
                               controller.userId.value = controller.chats[0].userId ?? '';
                               controller.fetchUserDetailById();
                               controller.update();
-                              Get.toNamed(Routes.studentDetail);
+                              Get.to(StudentDetailScreen());
                             } else {
-                              Get.toNamed(Routes.studentList);
+                              Get.to(StudentListScreen());
                             }
                           },
                           child: Obx(() => Column(
@@ -124,12 +132,17 @@ class ChatDetailScreen extends StatelessWidget {
                                   ? SizedBox(
                                 width: screenWidth * 0.50,
                                 child: Text(
-                                  controller.chats[0].groupMembers?.map((member) => member.name).join(", ") ?? "",
-                                  style: TextStyle(fontSize: 12, color: Colors.white),
+                                  controller.chats[0].groupMembers
+                                      ?.where((member) => member.roleId != "5")
+                                      .map((member) => member.name)
+                                      .join(", ") ??
+                                      "",
+                                  style: const TextStyle(fontSize: 12, color: Colors.white),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               )
+
                                   : Container(),
                             ],
                           )),

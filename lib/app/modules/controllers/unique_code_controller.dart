@@ -1,10 +1,10 @@
 import 'package:bravo/app/constants/app_colors/app_colors.dart';
-import 'package:bravo/app/modules/routes/app_pages.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../apiservice/api_service.dart';
 import '../apiservice/notification_service.dart';
 import '../models/unique_code_model.dart';
+import '../views/home_screen.dart';
 
 class UniqueCodeController extends GetxController {
   var isLoading = false.obs;
@@ -29,7 +29,7 @@ class UniqueCodeController extends GetxController {
         user.value = response.userInfo;
 
         await _saveUserId(response.userInfo?.userId ?? '',response.token?? '');
-        Get.offAllNamed(Routes.home);
+        Get.offAll(HomeScreen());
         Get.snackbar('Success', response.message,colorText: AppColors.white,backgroundColor: AppColors.calendarColor);
       } else {
         Get.snackbar('Error', response.message,colorText: AppColors.white,backgroundColor: AppColors.calendarColor);

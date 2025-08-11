@@ -1,174 +1,90 @@
 import 'package:bravo/app/modules/controllers/chat_individual_controller.dart';
-import 'package:bravo/app/modules/routes/app_pages.dart';
+import 'package:bravo/app/modules/views/chat_detail_individual_screen.dart';
+import 'package:bravo/app/modules/views/student_detail_screen.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:bravo/app/constants/app_colors/app_colors.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../controllers/chat_controller.dart';
 
-class StudentListScreen extends StatelessWidget {
-  StudentListScreen({super.key});
+class StudentListScreen extends StatefulWidget {
+  const StudentListScreen({super.key});
 
+  @override
+  State<StudentListScreen> createState() => _StudentListScreenState();
+}
 
+class _StudentListScreenState extends State<StudentListScreen> {
   final ChatController controller = Get.put(ChatController());
   final ChatIndividualController individualController = Get.put(ChatIndividualController());
+
+  String? userId;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserId();
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
+      ),
+    );
+  }
+
+  Future<void> _loadUserId() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      userId = prefs.getString('userId');
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
 
-    SystemChrome.setSystemUIOverlayStyle(
-      const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent, // ✅ Keeps the status bar transparent
-        statusBarIconBrightness: Brightness.light, // ✅ White icons on dark backgrounds
-        statusBarBrightness: Brightness.dark, // ✅ Ensures compatibility on iOS
-      ),
-    );
-
     return Scaffold(
       backgroundColor: AppColors.calendarColor,
       body: SafeArea(
-        child: Obx(()=>
-          Column(
+        child: Obx(() {
+          if (controller.chats.isEmpty) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          final chat = controller.chats[0];
+
+          return Column(
             children: [
-
               SizedBox(height: screenHeight * 0.02),
-
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-
-                    Row(
-                      children: [
-
-                        SizedBox(
-                          width: 20,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      const SizedBox(width: 20),
+                      GestureDetector(
+                        onTap: () => Get.back(),
+                        child: Image.asset(
+                          'assets/images/back.png',
+                          height: 30,
                         ),
-                        GestureDetector(
-                          onTap: (){
-                            Get.back();
-                          },
-                          child: Image.asset(
-                            'assets/images/back.png',
-                            height: 30,
-                          ),
-                        ),
-                        SizedBox(
-                          width: 20,
-                        ),
-                        Stack(
-                          children: [
-                            CircleAvatar(
-                              radius: 24, // Adjust size as needed
-                              backgroundColor: Colors.grey[300], // Placeholder background color
-                              child: CachedNetworkImage(
-                                imageUrl: controller.chats[0].profilePic??"",
-                                imageBuilder: (context, imageProvider) => Container(
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle, // Ensures circular shape
-                                    image: DecorationImage(
-                                      image: imageProvider,
-                                      fit: BoxFit.cover,
-                                    ),
-                                  ),
-                                ),
-                                placeholder: (context, url) => const CircularProgressIndicator(),
-                                errorWidget: (context, url, error) {
-                                  String initials = (controller.chats.isNotEmpty ?? false) ? controller.chats[0].name![0].toUpperCase() : '?';
-
-                                  return CircleAvatar(
-                                    radius: 24,
-                                    backgroundColor: AppColors.calendarColor, // Red background
-                                    child: Text(
-                                      initials,
-                                      style: const TextStyle(
-                                        color: AppColors.white, // White text for contrast
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(width: 20,),
-
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              controller.chats[0].name??"",
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-
-                          ],
-                        ),
-                      ],
-                    ),
-
-                    Visibility(
-                      visible: false,
-                      child: Row(
-                        children: [
-                          Icon(Icons.arrow_forward_ios,color: Colors.white,size: 20,),
-                        ],
                       ),
-                    ),
-
-                  ],
-                ),
-              ),
-              SizedBox(height: screenHeight*0.02,),
-              Expanded(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(20),
-                      topRight: Radius.circular(20),
-                    ),
-                  ),
-                  child: ListView.builder(
-                    padding: EdgeInsets.all(10),
-                    itemCount: controller.chats[0].groupMembers?.length,
-                    itemBuilder: (context, index) {
-                      final group = controller.chats[0].groupMembers?[index];
-                      return Container(
-                        margin: EdgeInsets.only(left: 10,right: 10),
-                        decoration: BoxDecoration(
-                          border: Border(
-                            bottom: BorderSide(color: Colors.grey, width: 0.5),
-                          ),
-                        ),
-                        child: ListTile(
-                          onTap: (){
-                            controller.userId.value = controller.chats[0].groupMembers?[index].userId??"";
-                            controller.fetchUserDetail();
-                            controller.update();
-                            Get.toNamed(Routes.studentDetail);
-                          },
-                          minTileHeight: 80,
-                          leading: CircleAvatar(
-                            radius: 24, // Adjust size as needed
-                            backgroundColor: Colors.grey[300], // Placeholder background color
+                      const SizedBox(width: 20),
+                      Stack(
+                        children: [
+                          CircleAvatar(
+                            radius: 24,
+                            backgroundColor: Colors.grey[300],
                             child: CachedNetworkImage(
-                              imageUrl: group?.profilePic ?? "",
+                              imageUrl: chat.profilePic ?? "",
                               imageBuilder: (context, imageProvider) => Container(
                                 decoration: BoxDecoration(
-                                  shape: BoxShape.circle, // Ensures circular shape
+                                  shape: BoxShape.circle,
                                   image: DecorationImage(
                                     image: imageProvider,
                                     fit: BoxFit.cover,
@@ -177,15 +93,17 @@ class StudentListScreen extends StatelessWidget {
                               ),
                               placeholder: (context, url) => const CircularProgressIndicator(),
                               errorWidget: (context, url, error) {
-                                String initials = (group?.name?.isNotEmpty ?? false) ? group!.name![0].toUpperCase() : '?';
+                                String initials = chat.name?.isNotEmpty == true
+                                    ? chat.name![0].toUpperCase()
+                                    : '?';
 
                                 return CircleAvatar(
                                   radius: 24,
-                                  backgroundColor: AppColors.calendarColor, // Red background
+                                  backgroundColor: AppColors.calendarColor,
                                   child: Text(
                                     initials,
                                     style: const TextStyle(
-                                      color: AppColors.white, // White text for contrast
+                                      color: AppColors.white,
                                       fontSize: 20,
                                       fontWeight: FontWeight.bold,
                                     ),
@@ -194,41 +112,125 @@ class StudentListScreen extends StatelessWidget {
                               },
                             ),
                           ),
-                          title: RichText(
-                            text: TextSpan(
-                              text: "${group?.name??""} ",
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black,
-                              ),
+                        ],
+                      ),
+                      const SizedBox(width: 20),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            chat.name ?? "",
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
                             ),
                           ),
-                          trailing: SizedBox(
-                            width: 50, // Adjust width as needed to fit both icons
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min, // Ensures row takes minimal space
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                GestureDetector(
-                                  onTap: () async {
-                                    individualController.chatId.value = int.tryParse(group?.userId??"")??0;
-                                    individualController.chatType.value = "private";
-                                    individualController.onInit();
-                                    individualController.update();
-                                    Get.toNamed(Routes.chatDetailIndividual);
-                                  },
-                                  child: SizedBox(
-                                    width: screenWidth*0.06,
-                                    child: Image.asset(
-                                      'assets/images/messenger.png',
-                                      height: 23,
-                                    ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const Visibility(
+                    visible: false,
+                    child: Icon(Icons.arrow_forward_ios, color: Colors.white, size: 20),
+                  ),
+                ],
+              ),
+              SizedBox(height: screenHeight * 0.02),
+              Expanded(
+                child: Container(
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(20),
+                      topRight: Radius.circular(20),
+                    ),
+                  ),
+                  child: ListView.builder(
+                    padding: const EdgeInsets.all(10),
+                    itemCount: chat.groupMembers?.length ?? 0,
+                    itemBuilder: (context, index) {
+                      final group = chat.groupMembers![index];
+                      if (group.roleId == "5") return Container();
+
+                      return Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 10),
+                        decoration: const BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(color: Colors.grey, width: 0.5),
+                          ),
+                        ),
+                        child: ListTile(
+                          onTap: () {
+                            controller.userId.value = group.userId ?? "";
+                            controller.fetchUserDetail();
+                            controller.update();
+                            Get.to(() => StudentDetailScreen());
+                          },
+                          minTileHeight: 80,
+                          leading: CircleAvatar(
+                            radius: 24,
+                            backgroundColor: Colors.grey[300],
+                            child: CachedNetworkImage(
+                              imageUrl: group.profilePic ?? "",
+                              imageBuilder: (context, imageProvider) => Container(
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  image: DecorationImage(
+                                    image: imageProvider,
+                                    fit: BoxFit.cover,
                                   ),
                                 ),
-                                SizedBox(width: 10), // Add spacing between icons
-                                Icon(Icons.arrow_forward_ios, size: 15),
-                              ],
+                              ),
+                              placeholder: (context, url) => const CircularProgressIndicator(),
+                              errorWidget: (context, url, error) {
+                                String initials = group.name?.isNotEmpty == true
+                                    ? group.name![0].toUpperCase()
+                                    : '?';
+                                return CircleAvatar(
+                                  radius: 24,
+                                  backgroundColor: AppColors.calendarColor,
+                                  child: Text(
+                                    initials,
+                                    style: const TextStyle(
+                                      color: AppColors.white,
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                );
+                              },
                             ),
+                          ),
+                          title: Text(
+                            group.name ?? "",
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
+                          ),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              GestureDetector(
+                                onTap: () {
+                                  individualController.chatId.value =
+                                      int.tryParse(group.userId ?? "") ?? 0;
+                                  individualController.chatType.value = "private";
+                                  individualController.onInit();
+                                  individualController.update();
+                                  Get.to(() => ChatDetailIndividualScreen());
+                                },
+                                child: group.userId == userId
+                                    ? Text('YOU',style: TextStyle(fontSize: 15),)
+                                    : Image.asset(
+                                  'assets/images/messenger.png',
+                                  height: 23,
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              const Icon(Icons.arrow_forward_ios, size: 15),
+                            ],
                           ),
                         ),
                       );
@@ -237,10 +239,9 @@ class StudentListScreen extends StatelessWidget {
                 ),
               ),
             ],
-          ),
-        ),
+          );
+        }),
       ),
     );
   }
-  
 }

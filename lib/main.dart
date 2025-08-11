@@ -1,4 +1,7 @@
 import 'dart:convert';
+import 'package:bravo/app/modules/views/chat_detail_screen.dart';
+import 'package:bravo/app/modules/views/home_screen.dart';
+import 'package:bravo/app/modules/views/splash_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
@@ -8,7 +11,7 @@ import 'app/constants/app_colors/app_colors.dart';
 import 'app/modules/apiservice/api_service.dart';
 import 'app/modules/controllers/chat_controller.dart';
 import 'app/modules/controllers/chat_individual_controller.dart';
-import 'app/modules/routes/app_pages.dart';
+import 'app/modules/views/view_event_screen.dart';
 import 'firebase_options.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
@@ -156,9 +159,8 @@ class _MyAppState extends State<MyApp> {
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Bravo',
-      initialRoute: Routes.splash,
-      getPages: AppPages.routes,
       theme: ThemeData(fontFamily: 'Roboto'),
+      home: SplashScreen(),
     );
   }
 }
@@ -180,14 +182,14 @@ Future<void> _handleNotificationTap(String payload) async {
           individualController.chatId.value = int.tryParse(chatId) ?? 0;
           individualController.chatType.value = "private";
           individualController.onInit();
-          Get.toNamed(Routes.chatDetail);
+          Get.to(ChatDetailScreen());
         } else {
           print('screen group wali');
           final ChatController chatController = Get.put(ChatController());
           chatController.chatId.value = int.tryParse(chatId) ?? 0;
           chatController.chatType.value = chatType;
           chatController.onInit();
-          Get.toNamed(Routes.chatDetail);
+          Get.to(ChatDetailScreen());
         }
         break;
 
@@ -198,7 +200,7 @@ Future<void> _handleNotificationTap(String payload) async {
         try {
           var fetchedEvents = await apiService.fetchEventById(eventId);
 
-          Get.toNamed(Routes.viewEvent, arguments: fetchedEvents);
+          Get.to(ViewEventScreen(), arguments: fetchedEvents);
         }
         catch (e){
           Get.snackbar('Error', 'Something went wrong',colorText: AppColors.white,backgroundColor: AppColors.calendarColor);
@@ -208,10 +210,10 @@ Future<void> _handleNotificationTap(String payload) async {
         break;
 
       default:
-        Get.toNamed(Routes.home);
+        Get.to(HomeScreen());
     }
   } catch (e) {
     print("Error decoding payload: $e");
-    Get.toNamed(Routes.home);
+    Get.to(HomeScreen());
   }
 }

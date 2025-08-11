@@ -200,23 +200,27 @@ class GroupMember {
   String? userId;
   String? name;
   String? profilePic;
+  String? roleId;
 
   GroupMember({
     this.userId,
     this.name,
     this.profilePic,
+    this.roleId,
   });
 
   factory GroupMember.fromJson(Map<String, dynamic> json) => GroupMember(
     userId: json["userId"],
     name: json["name"],
     profilePic: json["profilePic"],
+    roleId: json["role"],
   );
 
   Map<String, dynamic> toJson() => {
     "userId": userId,
     "name": name,
     "profilePic": profilePic,
+    "role": roleId,
   };
 }
 

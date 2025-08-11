@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:bravo/app/modules/models/student_detail_model.dart';
 import 'package:bravo/app/modules/models/user_details_model.dart';
 import 'package:bravo/app/modules/views/student_detail_screen.dart';
+import 'package:bravo/app/modules/views/unique_code_screen.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -13,7 +14,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../constants/app_colors/app_colors.dart';
 import '../apiservice/api_service.dart';
 import '../models/user_chat_model.dart';
-import '../routes/app_pages.dart';
 import 'message_controller.dart';
 
 class ChatIndividualController extends GetxController {
@@ -178,7 +178,7 @@ class ChatIndividualController extends GetxController {
               backgroundColor: AppColors.calendarColor);
           SharedPreferences preferences = await SharedPreferences.getInstance();
           await preferences.clear();
-          Get.offAllNamed(Routes.uniqueCode);
+          Get.to(UniqueCodeScreen());
         }
       }
     } catch (e) {
@@ -233,7 +233,7 @@ class ChatIndividualController extends GetxController {
               backgroundColor: AppColors.calendarColor);
           SharedPreferences preferences = await SharedPreferences.getInstance();
           await preferences.clear();
-          Get.offAllNamed(Routes.uniqueCode);
+          Get.to(UniqueCodeScreen());
         }
       }
     } catch (e) {
